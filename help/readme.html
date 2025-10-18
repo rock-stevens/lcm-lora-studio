@@ -1,0 +1,428 @@
+<html>
+    <head>
+        <title>LCM-LoRA Studio - Help - README</title>
+        <style>
+            body {
+                background-color: #111111; /* Sets the background to black */
+                color: #cc6644;             /* Sets the default text color to orange */
+            }
+			/* Group all link states together and set the color */
+			a,
+			a:link,
+			a:visited,
+			a:hover,
+			a:active,
+			a:focus {
+				color: #aaaaaa; /* Sets all links to the same gray color */
+				text-decoration: underline; /* Optional: Keep underline for links */
+			}
+			pre {
+				background-color: #111111;
+                color: #aaaaaa;
+				border: 1px solid #cc6644;
+				padding: 1em;
+				overflow-x: auto;
+				font-family: monospace;
+			}
+        </style>
+    </head>
+<body>
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio v1.3 - Help - README</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+<li><a href="readme.html">README.md from the 'lcm-lora-studio' repository</a></li>
+<li><a href="seed.html">Seed</a></li>
+<li><a href="license.html">License</a></li>
+<li><a href="copyright.html">Copyright</a></li>
+</ul>
+</p>
+<hr width="95%">
+
+<!-- *********************************************************** -->
+<!-- README.md from lcm-lora-studio repository -->
+<!-- *********************************************************** -->
+<a id="top"><a/>
+<h1 id="lcm-lora-studio">LCM-LoRA Studio</h1>
+<p><img src="lcm-lora-studio-app-header.png" alt="LCM-LoRA Studio">  </p>
+<p><a id="introduction"></a></p>
+<h2 id="introduction">Introduction</h2>
+<p><em><strong>Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.</strong></em>  </p>
+<p>At it&#39;s basic core it generates images using common 
+StableDiffusion techniques. However add an LCM-LoRA to the base model and this enables a 4 Step inference 
+to generate images. This shorter number of steps allows us to generate images faster than the nomal 20-50 
+step de-noising process. LCM-LoRA Studio was mainly written for PC&#39;s with no good GPU, and the 
+Raspberry Pi 5 (both 8GB and 16GB versions) as a first step, in order to reduce inference time while 
+still generating high-quality images.<br>And to create special LoRA &#39;baked-in&#39; types of models, in an, 'all-in-one' application.</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>Greatly reduces image generation time.</li>
+<li>Save loaded Pipeline as a New Model.</li>
+<li>Works with most existing fine-tuned Stable Diffusion SD/SDXL models, including custom checkpoints and other LoRAs.</li>
+<li>Can be used with other LoRAs to generate specific styles or add structural guidance, with very little to no difference in inference speed.</li>
+<li>Can function 100% Offline ! (Once you have downloaded all the needed models.)</li>
+<li>CPU with only 8G RAM for SD ! (16G RAM for SDXL)</li>
+<li>With just a Raspberry Pi5 -OR- a modest computer with 8G RAM. You can generate great looking images.</li>
+</ul>
+<p><strong>Design:</strong><br>This app is designed to address 2 issues that exist.  </p>
+<ol>
+<li>I do not have a good GPU.  </li>
+<li>I do not have a high-end PC with tons of RAM.</li>
+</ol>
+<p><a id="qindex"></a></p>
+<h2 id="quick-index">Quick Index</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#qindex">Quick Index</a></li>
+<li><a href="#t2ishot">Text to Image Screenshot</a></li>
+<li><a href="#outshot">Output Image Screenshot</a></li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#block-diagram">Block Diagram Model - Pipeline</a></li>
+<li><a href="#features">LCM-LoRA Studio Features</a></li>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#run">Run</a></li>
+<li><a href="#loop-version">Run (LOOP) Version</a></li>
+<li><a href="#credits">Acknowledgements / Credits</a></li>
+<li><a href="#disclaimer">Disclaimer</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+<hr>
+<p><a id="t2ishot"></a></p>
+<h3 id="text-to-image-screenshot">Text to Image Screenshot</h3>
+<p><img src="image_generation_text_to_image75.png" alt="LCM-LoRA Studio"></p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+
+<p><a id="outshot"></a></p>
+<h3 id="output-image-screenshot">Output Image Screenshot</h3>
+<p><img src="image_generation_output_image75.png" alt="LCM-LoRA Studio"></p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+
+<hr>
+<p><a id="summary"></a></p>
+<h2 id="summary">Summary</h2>
+<p>In essence, Load a SD/SDXL model into the LCM-LoRA Studio &#39;Pipeline&#39;, add the LCM-LoRA Weight to the &#39;Pipeline&#39;, 
+then you can generate an image in ONLY 4 STEPS. Then, if you like the results, 
+Save the &#39;Pipeline&#39; as a New LCM-LoRA Model. Or add additional LoRA models for various fine-tuning tasks, 
+and Save that model as well.<br>See the block diagram below.</p>
+<p><a id="block-diagram"></a></p>
+<h2 id="block-diagram-model---pipeline">Block Diagram Model - Pipeline</h2>
+<p><img src="lcm-lora-studio-block-diagram.png" alt="LCM-LoRA Studio"></p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+
+<p><a id="features"></a></p>
+<h2 id="lcm-lora-studio-features">LCM-LoRA Studio Features</h2>
+<p><strong>Image Generation (SD/SDXL)</strong></p>
+<ul>
+<li>Text to Image</li>
+<li>Image to Image</li>
+<li>Inpainting</li>
+<li>Instruct Pix2Pix</li>
+<li>Image Upscaling - SD Upscaler 2x</li>
+<li>SD ControlNet (<em>Use up to two ControlNets at once !!) MLSD Line Detection, HED Edge Detection, Depth Estimation, Scribble, Canny, Normal Map Estimation, Image Segmentation and OpenPose.</em>)</li>
+</ul>
+<p><strong>Prompts</strong></p>
+<ul>
+<li>Both Prompt and Negative prompt inputs.</li>
+<li>Embedded Prompts (Can be adjusted in settings.)</li>
+<li>Prompt Weighting (uses the &#39;Compel&#39; prompt weight library, also can be adjusted in settings.)</li>
+<li>Prompt token length checking.</li>
+<li>Paste Prompt Button, loads prompt from OS clipboard.</li>
+</ul>
+<p><strong>General Image Generation</strong></p>
+<ul>
+<li>Live Inference Progress Bar During Generation. Shows Time, Current Inference Step.</li>
+<li>Access the Diffusers &#39;FreeU&#39; configuration settings, to tweak for various generation changes.</li>
+<li>Seed - Single Images: Start on the selected seed, Start on a random seed.</li>
+<li>Seed - Multiple Images: Same as Single Image -OR- increment seed up or down by X amount.</li>
+<li>Generate a LARGE number of images when Generating Multiple Images.</li>
+<li>Clip Skip (SD)</li>
+<li>Uses Safety Checker via an Image Classification Model. (which can be disabled in settings if needed)</li>
+<li>Auto Jump to &#39;Output Image Tab&#39; when you click the &#39;Generate&#39; button.</li>
+<li>Saves Generation text-parameter file with generated image (PNG).</li>
+</ul>
+<p><strong>Models - Pipeline</strong></p>
+<ul>
+<li>Load SD and SDXL Local Previously Saved LCM-LoRA Models</li>
+<li>Load SD and SDXL Local Huggingface &#39;Cache&#39; Models - Auto filters out all non SD/SDXL models. (No LLMs, etc...)</li>
+<li>Load SD and SDXL Huggingface Models (You can grab just the files needed, and it will load the model directly into the &#39;Pipeline&#39;, or the &#39;whole repository&#39;)</li>
+<li>Load SD and SDXL Safetensors Models - Single File Safetensors Models - From Huggingface, Civitai etc...</li>
+<li>Load SD and SDXL LoRA Models - Single File Safetensors Models - From Huggingface, Civitai etc...</li>
+<li>Load a seperate text encoder than the loaded model uses. (LCM-LoRA, SD)</li>
+<li>Use &#39;Reference&#39; Models and/or &#39;Original Config&#39; Files when Loading Safetensors Model files to guide loading. (See settings)</li>
+</ul>
+<p><strong>LoRA</strong></p>
+<ul>
+<li>Load the LCM-LoRA Weights and then save the Pipeline as an LCM-LoRA Model for the faster &#39;4 step inference&#39;.</li>
+<li>Auto (optional) Load/Apply the LCM-LoRA Weights when loading models, or Load without the LCM-LoRA Weights.</li>
+<li>Load (Add) &#39;multiple&#39; LoRAs directly into the pipeline.</li>
+<li>Change any loaded LoRAs weights, individualy.</li>
+<li>&quot;Bake&quot; or &quot;Merge&quot; a LoRA into the Pipeline, then Save as an LCM-LoRA Model.</li>
+<li>Load and Save the Model Pipeline. With or without LoRA weights.</li>
+</ul>
+<p><strong>General Features</strong></p>
+<ul>
+<li>&#39;Simple OpenPose Editor&#39; Opens in a new window (tab). 100% Offline, Pure HTML/JavaScript. Saves PNG images for use with  OpenPose/ControlNet.</li>
+<li>Multi-Step Image Proccessing Section </li>
+<li>Tweak/Enhance Images Before and/or After Generation). Including: Adjust Brightness, Contrast, Color, Individual R/G/B Weight on Images</li>
+<li>Convert to Grayscale - Adjusting Upper/Lower Thresholds, Individual R/G/B Weights, Invert GrayScale</li>
+<li>Post Processing Edge Detection (Use for some of the ControlNets). Canny, Laplacian, Scharr, Sobel, Simple Gradient, Prewitt, Roberts Cross.</li>
+<li>Processed Output Image can be Inverted as well as apply Sharpening.</li>
+<li>Save processed image at any step.</li>
+<li>Apply Gaussian, Horizontal and/or Vertical Motion Blur at any stage of image processing.</li>
+<li>Send Proccessed Output Image Directly to either of the 2 ControlNet Image Input controls. (Then Switches to the ControlNet Tab.)</li>
+<li>Access many &#39;Settings&#39; which control LCM-LoRA Studio, as well as some of the backend and how models are loaded/handled.</li>
+<li>Enable &#39;Use Authenticaion&#39;. (Require a Login.)</li>
+</ul>
+<br>
+
+<p><strong>Programmers-Hacking Features</strong></p>
+<ul>
+<li>Very easy to add settings to program, see &#39;config.py&#39;</li>
+<li>Choose between Textbox, Slider, Number, Checkbox, HTML and Label as &#39;Input&#39; types in the Setting UI.</li>
+<li>Written as an example of &#39;simple python coding&#39; image generation. Basically in a &#39;canned code&#39; type format like some compilers I&#39;ve written. </li>
+<li>Lots of comments throughout. (unless kinda obvious what it does.)</li>
+</ul>
+
+<p><a id="performance"></a>  </p>
+<h2 id="performance">Performance</h2>
+<p><strong>Model</strong>: Original Stable Diffusion Base (SD) v1.5<br>
+<strong>LoRA</strong>: SD15 LCM-LoRA added to model with weight of 1.0<br>
+<strong>Image Size</strong>: 512 x 512<br>
+<strong>CFG</strong>: 1.0<br>
+<strong>Prompts</strong>: Normal, no embedded prompts.<br><br></p>
+
+<table cellpadding="10" cellspacing="1" border="1">
+<thead>
+<tr>
+<th>Operating System</th>
+<th>CPU</th>
+<th>RAM</th>
+<th>Storage Type</th>
+<th>Time per iter</th>
+<th>Total time</th>
+<th>SD Model / Prec</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Windows 10 Pro</td>
+<td>Intel(R) Core(TM) i5-12500T @ 2.00GHz</td>
+<td>16G</td>
+<td>USB 3.0 FLASH</td>
+<td>6.34 s/it</td>
+<td>48 s</td>
+<td>LCM-LoRA / FP16</td>
+</tr>
+<tr>
+<td>Windows 11 Pro</td>
+<td>Intel(R) N95 @ (1.70 GHz)</td>
+<td>8G</td>
+<td>USB 3.0 SSD</td>
+<td>8.23 s/it</td>
+<td>53 s</td>
+<td>LCM-LoRA / FP16</td>
+</tr>
+<tr>
+<td>Windows 11 Pro</td>
+<td>Intel(R) N95 @ (1.70 GHz)</td>
+<td>16G</td>
+<td>USB 3.0 SSD</td>
+<td>8.04 s/it</td>
+<td>53 s</td>
+<td>LCM-LoRA / FP16</td>
+</tr>
+<tr>
+<td>Raspberry Pi OS</td>
+<td>Raspberry Pi 5</td>
+<td>8G</td>
+<td>Class10 SDCARD</td>
+<td>14.61s/it</td>
+<td>77 s</td>
+<td>LCM-LoRA / FP16</td>
+</tr>
+<tr>
+<td>Raspberry Pi OS</td>
+<td>Raspberry Pi 5</td>
+<td>16G</td>
+<td>PCIe 2.0 NVMe SSD</td>
+<td>13.19s/it</td>
+<td>71 s</td>
+<td>LCM-LoRA / FP16</td>
+</tr>
+</tbody></table>
+<p><em>Inference time always goes up if there is an increase in, Image Size or CFG Scale, and SDXL models always take longer than SD models.<br>&#39;Time per iter&#39; comes from the &#39;diffusers&#39; progress bar.<br>&#39;Total time&#39; comes from LCM-LoRA Studio. Starts when inference begins, Stops once the image is saved.</em></p>
+<p>On MY Windows 10/11 systems I run a &#39;Pure Portable Python/AI System&#39; off of an External USB 3.0 SSD, that I created which never touches the Windows Hard Drive. :)
+<br>Everything, Python, Git, FFMPEG, mingw64 and more..., Models, Huggingface Cache, Gradio Cache, TEMP folders, PIP and it&#39;s Cache, Source, Docs... Everything.<br>So it has to load Python, the libraries/imports, models ALL through the USB bottleneck. :(
+<br>
+I&#39;ll probably release details on that in a seperate repo or something at a later date once I&#39;m done with this project, with it all packaged up and doc&#39;d.  </p>
+
+<p>
+So, with...<br>
+1. Python actually installed on your system.<br>
+2. And, with the No USB bottleneck I get because of my particular setup.<br>
+<br>
+It should perform faster on your system than my system (with same CPU/Speed/RAM etc..), mainly in the 'loading', 'saving' models area and other storage intensive tasks.<br>
+</p>
+
+
+<p><a id="requirements"></a></p>
+<h2 id="requirements">Requirements</h2>
+<p>To install, ensure you are connected to the internet for installation of Python packages not in your pip cache, etc... 
+Then later of course to download models, after that, it can work 100% Offline.  </p>
+<ul>
+<li>Good Internet Connection</li>
+<li>Windows 10 or higher, Raspberry Pi 5 OS (Linux)</li>
+<li>Minimum Python version 3.10.8 (NOTE: Installer does not check version, only if Python exists)</li>
+<li>CPU system with at least 8 GB RAM for SD models ONLY -OR- at least 16GB to do BOTH SD and SDXL Models.</li>
+<li>Modern web browser for the user interface.</li>
+</ul>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+
+<hr>
+<p><a id="installation"></a></p>
+<h2 id="installation">Installation</h2>
+<ul>
+<li>Download LCM-LoRA-Studio from GitHub, and unzip to a folder where you want it installed.</li>
+</ul>
+<br>
+
+<h4 id="windows-install">Windows Install</h4>
+<p>LCM-LoRA Studio can be installed right from Explorer.<br>Just navigate to the LCM-LoRA Studio folder and double-click:</p>
+<pre><code class="language-cmd">install.bat
+</code></pre>
+<br>
+
+<h4 id="raspberry-pi-5-install">Raspberry Pi 5 Install</h4>
+<p>Open a terminal and navigate to the directory you unzipped &#39;LCM-LoRA Studio&#39; to.<br>In the terminal type the following 2 command lines:</p>
+<pre><code class="language-shell">chmod +x *.sh
+./install.sh
+</code></pre>
+<br>
+
+<p>On both Windows and the Raspberry Pi 5, LCM-LoRA Studio installer will install the needed Python packages in order to run the app.<br>After installation of all of the packages, LCM-LoRA Studio will be ready to run.</p>
+
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+<hr>
+<p><a id="run"></a></p>
+<h2 id="run-lcm-lora-studio">Run LCM-LoRA Studio</h2>
+<br>
+
+<h4 id="run-windows-version">Run Windows Version</h4>
+<p>To Run LCM-LoRA Studio, it is the same as the installation, from Explorer.<br>Just navigate to the LCM-LoRA Studio folder, but double-click:</p>
+<pre><code class="language-cmd">run.bat
+</code></pre>
+<br>
+
+
+
+<h4 id="run-raspberry-pi-5-version">Run Raspberry Pi 5 Version</h4>
+<p>To Run LCM-LoRA Studio, In the terminal type the following command line:</p>
+<pre><code class="language-shell">./run.sh
+</code></pre>
+<br>
+
+
+<p>On &#39;first-run&#39;, the app will go to Huggingface and download the &#39;Image Classifier&#39; model used in LCM-LoRA Studio. 
+(unless already in your Huggingface Hub Cache). This is done to ensure the location, ie... path exists before LCM-LoRA Studio gets going, because they need to exist. 
+(I&#39;ve had some instances that the enviroment variable for the Hub Cache folder &#39;HF_HOME&#39; nor the &#39;HF_HUB_CACHE&#39; existed until there is something downloaded.) 
+And, LCM-Lora Studio needs it, so we can later load a model from the cache via a simple dropdown inside the app.
+The Image Classifier model, seeds the Hub Cache folder and the Image Classifier can be turned off later in the settings.<br>On some OSes, you may actually have to go into the settings and manually tell LCM-LoRA Studio the location of the Hub Cache folder.  </p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+<hr>
+<p><a id="loop-version"></a></p>
+<h2 id="run-loop-version">Run (LOOP) Version</h2>
+<p>To Run LCM-LoRA Studio, in a LOOP, on Windows, you can start it from Explorer.<br>Just navigate to the LCM-LoRA Studio folder and double-click:</p>
+<pre><code class="language-cmd">restart.bat
+</code></pre>
+<br>
+
+
+<p>To Run LCM-LoRA Studio, in a LOOP, on a Raspberry Pi 5<br>In the terminal type the following command line:</p>
+<pre><code class="language-shell">./restart.sh
+</code></pre>
+<br>
+  
+  
+<p>About the Run LOOP method of starting LCM-LoRA Studio.<br>You can:  </p>
+<ul>
+<li>Restart Python from the UI. Great for a remote Pi5.</li>
+<li>Turn ON/OFF Huggingface Hub, for 100% offline.</li>
+<li>You can also modify the &#39;restart.sh&#39; or &#39;restart.bat&#39; files to force a particular default state on startup.</li>
+</ul>
+<p>Note: With or without running LCM-LoRA Studio, via &#39;run&#39; or &#39;restart&#39; there is an Exit button in the App, try it.  </p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+<hr>
+<p><a id="credits"></a></p>
+<h2 id="acknowledgements--credits">Acknowledgements / Credits</h2>
+<ul>
+<li>Original implementation of Stable Diffusion: <a href="https://github.com/CompVis/stable-diffusion">https://github.com/CompVis/stable-diffusion</a> </li>
+<li>Diffusers Library: <a href="https://github.com/huggingface/diffusers">https://github.com/huggingface/diffusers</a> </li>
+<li>Huggingface (Lots of Models, Example code, Documention, etc...) : <a href="https://huggingface.co/">https://huggingface.co/</a> </li>
+<li>Civitai (Lot of Base models and LoRA models) : <a href="https://civitai.com/">https://civitai.com/</a> </li>
+<li>Compel - A text prompt weighting and blending library for transformers-type text embedding systems : <a href="https://github.com/damian0815/compel">https://github.com/damian0815/compel</a></li>
+</ul>
+<p><strong>Models used</strong>:  </p>
+<ul>
+<li>Falconsai/nsfw_image_detection -  Fine-Tuned Vision Transformer (ViT) for NSFW Image Classification: <a href="https://huggingface.co/Falconsai/nsfw_image_detection">https://huggingface.co/Falconsai/nsfw_image_detection</a>  </li>
+<li>stabilityai/sd-x2-latent-upscaler - Stable Diffusion x2 latent upscaler : <a href="https://huggingface.co/stabilityai/sd-x2-latent-upscaler">https://huggingface.co/stabilityai/sd-x2-latent-upscaler</a></li>
+</ul>
+<p><strong>Latent Consistency Models (LCM) LoRA</strong> :<br>A universal Stable-Diffusion Acceleration Module by: Simian Luo, Yiqin Tan, Suraj Patil, Daniel Gu et al. : <a href="https://huggingface.co/latent-consistency">https://huggingface.co/latent-consistency</a>  </p>
+<ul>
+<li>SD Model: latent-consistency/lcm-lora-sdv1-5  : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdv1-5">https://huggingface.co/latent-consistency/lcm-lora-sdv1-5</a>  </li>
+<li>SDXL Model: latent-consistency/lcm-lora-sdxl : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdxl">https://huggingface.co/latent-consistency/lcm-lora-sdxl</a></li>
+</ul>
+<p><strong>ControlNet</strong>:<br>ControlNet : <a href="https://huggingface.co/lllyasviel">https://huggingface.co/lllyasviel</a><br>Github: <a href="https://github.com/lllyasviel/ControlNet">https://github.com/lllyasviel/ControlNet</a><br>Read the ControlNet Blog for more: <a href="https://huggingface.co/blog/controlnet">https://huggingface.co/blog/controlnet</a>  </p>
+<p><strong>ControlNet Models used</strong>:<br>MLSD Line Detection: lllyasviel/sd-controlnet-mlsd : <a href="https://huggingface.co/lllyasviel/sd-controlnet-mlsd">https://huggingface.co/lllyasviel/sd-controlnet-mlsd</a><br>HED Edge Detection: lllyasviel/sd-controlnet-hed : <a href="https://huggingface.co/lllyasviel/sd-controlnet-hed">https://huggingface.co/lllyasviel/sd-controlnet-hed</a><br>Depth Estimation: lllyasviel/sd-controlnet-depth : <a href="https://huggingface.co/lllyasviel/sd-controlnet-depth">https://huggingface.co/lllyasviel/sd-controlnet-depth</a><br>Scribble: lllyasviel/sd-controlnet-scribble : <a href="https://huggingface.co/lllyasviel/sd-controlnet-scribble">https://huggingface.co/lllyasviel/sd-controlnet-scribble</a><br>Canny: lllyasviel/sd-controlnet-canny : <a href="https://huggingface.co/lllyasviel/sd-controlnet-canny">https://huggingface.co/lllyasviel/sd-controlnet-canny</a><br>Normal Map Estimation: lllyasviel/sd-controlnet-normal : <a href="https://huggingface.co/lllyasviel/sd-controlnet-normal">https://huggingface.co/lllyasviel/sd-controlnet-normal</a><br>Image Segmentation: lllyasviel/sd-controlnet-seg : <a href="https://huggingface.co/lllyasviel/sd-controlnet-seg">https://huggingface.co/lllyasviel/sd-controlnet-seg</a><br>OpenPose: lllyasviel/sd-controlnet-openpose : <a href="https://huggingface.co/lllyasviel/sd-controlnet-openpose">https://huggingface.co/lllyasviel/sd-controlnet-openpose</a>  </p>
+<p><strong>Other Thanks</strong>:<br>My Wife, and my family, who left me alone... with quiet... long enough to finish.</p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+<hr>
+<p><a id="disclaimer"></a></p>
+<h2 id="disclaimer">Disclaimer</h2>
+<p>Do NOT use this project in any way to produce illegal, harmful or offensive content.<br>The author is NOT responsible for ANY content generated using this project, not limited to just models and images.  </p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+<hr>
+<p><a id="license"></a></p>
+<h2 id="license">License</h2>
+<p>Licensed under the Apache License, Version 2.0  </p>
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
+
+<hr width="95%">
+
+Thanks for trying LCM-LoRA Studio v1.3.  
+
+Feel free to use, install, share, hack and enjoy !  
+
+Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a>
+
+
+
+
+
+<!-- ************************************************************* -->
+
+
+
+</body>
+</html>

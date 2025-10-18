@@ -1,0 +1,14 @@
+a creek running down a hill and through a field, surrounded by lush plants and tall trees, with the trees slightly blocking a sunny day, photo realistic, hyperdetailed
+
+blurry, out of focus, poorly drawn, anime, cartoon, low resolution, bad anatomy, bad fingers, bad eyes, bad arms
+
+Steps: 4, CFG scale: 1, Seed: 3858770713, Size: 512x512
+Pipeline: StableDiffusionPipeline
+Model Loaded From: LCMLORA
+Model Type: SD15
+Model: LCMLORA_stable-diffusion-v1-5--stable-diffusion-v1-5
+Loaded LoRA Adapters: 0
+Image Filename: LCMLORA_3858770713_1_251016101623_030711.png
+Inference Time: 01 minutes, 03 seconds
+Generation Method: Text to Image
+Prompt Type: Normal Prompts (SD15)
