@@ -36,6 +36,7 @@ This app is designed to address 2 issues that exist.
 ## Quick Index
 * [Introduction](#introduction)
 * [Quick Index](#qindex)
+* [YouTube Videos](#youtube)
 * [Text to Image Screenshot](#t2ishot)
 * [Output Image Screenshot](#outshot)
 * [Summary](#summary)
@@ -51,6 +52,19 @@ This app is designed to address 2 issues that exist.
 * [License](#license)
 
 ---
+
+<a id="youtube"></a>
+### YouTube Videos 
+
+[Install of LCM-LoRA-Studio on a Raspberry Pi 5](https://youtu.be/PXEmXvmkqdQ)  
+[Realtime Run of LCM-LoRA-Studio on a Raspberry Pi 5 from Command Line](https://youtu.be/0nEvR0uNlMo)  
+[Demo of the Restart feature in LCM-LoRA-Studio on a Raspberry Pi 5](https://youtu.be/pGscdxQ_vGA)  
+[Install of LCM-LoRA-Studio on Windows](https://youtu.be/8WwrtT_DEMc)  
+[First Run of LCM-LoRA-Studio on Windows](https://youtu.be/4AfTc6sMogY)  
+
+<br>
+
+[Back to Top](#top) | [Quick Index](#qindex)
 
 <a id="t2ishot"></a>
 ### Text to Image Screenshot 
