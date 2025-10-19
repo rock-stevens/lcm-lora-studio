@@ -75,6 +75,7 @@ still generating high-quality images.<br>And to create special LoRA &#39;baked-i
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#qindex">Quick Index</a></li>
+<li><a href="#youtube">YouTube Videos</a></li>
 <li><a href="#t2ishot">Text to Image Screenshot</a></li>
 <li><a href="#outshot">Output Image Screenshot</a></li>
 <li><a href="#summary">Summary</a></li>
@@ -89,6 +90,25 @@ still generating high-quality images.<br>And to create special LoRA &#39;baked-i
 <li><a href="#disclaimer">Disclaimer</a></li>
 <li><a href="#license">License</a></li>
 </ul>
+<hr>
+<p><a id="youtube"></a></p>
+<h3 id="youtube-videos">YouTube Videos</h3>
+
+<p>
+
+<ul>
+<li><a href="https://youtu.be/PXEmXvmkqdQ" target="_blank">Install of LCM-LoRA-Studio on a Raspberry Pi 5</a></li>
+<li><a href="https://youtu.be/0nEvR0uNlMo" target="_blank">Realtime Run of LCM-LoRA-Studio on a Raspberry Pi 5 from Command Line</a></li>
+<li><a href="https://youtu.be/pGscdxQ_vGA" target="_blank">Demo of the Restart feature in LCM-LoRA-Studio on a Raspberry Pi 5</a></li>
+<li><a href="https://youtu.be/8WwrtT_DEMc" target="_blank">Install of LCM-LoRA-Studio on Windows</a></li>
+<li><a href="https://youtu.be/4AfTc6sMogY" target="_blank">First Run of LCM-LoRA-Studio on Windows</a></li>
+</ul>
+
+</p>
+
+<br>
+<a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
+<br>
 <hr>
 <p><a id="t2ishot"></a></p>
 <h3 id="text-to-image-screenshot">Text to Image Screenshot</h3>
@@ -338,7 +358,8 @@ Then later of course to download models, after that, it can work 100% Offline.  
 (unless already in your Huggingface Hub Cache). This is done to ensure the location, ie... path exists before LCM-LoRA Studio gets going, because they need to exist. 
 (I&#39;ve had some instances that the enviroment variable for the Hub Cache folder &#39;HF_HOME&#39; nor the &#39;HF_HUB_CACHE&#39; existed until there is something downloaded.) 
 And, LCM-Lora Studio needs it, so we can later load a model from the cache via a simple dropdown inside the app.
-The Image Classifier model, seeds the Hub Cache folder and the Image Classifier can be turned off later in the settings.<br>On some OSes, you may actually have to go into the settings and manually tell LCM-LoRA Studio the location of the Hub Cache folder.  </p>
+The Image Classifier model, seeds the Hub Cache folder and the Image Classifier can be turned off later in the settings.<br>
+On some OSes, you may actually have to go into the settings and manually tell LCM-LoRA Studio the location of the Hub Cache folder.  </p>
 <br>
 <a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
 <br>
@@ -371,24 +392,25 @@ The Image Classifier model, seeds the Hub Cache folder and the Image Classifier 
 <p><a id="credits"></a></p>
 <h2 id="acknowledgements--credits">Acknowledgements / Credits</h2>
 <ul>
-<li>Original implementation of Stable Diffusion: <a href="https://github.com/CompVis/stable-diffusion">https://github.com/CompVis/stable-diffusion</a> </li>
-<li>Diffusers Library: <a href="https://github.com/huggingface/diffusers">https://github.com/huggingface/diffusers</a> </li>
-<li>Huggingface (Lots of Models, Example code, Documention, etc...) : <a href="https://huggingface.co/">https://huggingface.co/</a> </li>
-<li>Civitai (Lot of Base models and LoRA models) : <a href="https://civitai.com/">https://civitai.com/</a> </li>
-<li>Compel - A text prompt weighting and blending library for transformers-type text embedding systems : <a href="https://github.com/damian0815/compel">https://github.com/damian0815/compel</a></li>
+<li>Original implementation of Stable Diffusion: <a href="https://github.com/CompVis/stable-diffusion" target="_blank">https://github.com/CompVis/stable-diffusion</a> </li>
+<li>Diffusers Library: <a href="https://github.com/huggingface/diffusers" target="_blank">https://github.com/huggingface/diffusers</a> </li>
+<li>Huggingface (Lots of Models, Example code, Documention, etc...) : <a href="https://huggingface.co/" target="_blank">https://huggingface.co/</a> </li>
+<li>Civitai (Lot of Base models and LoRA models) : <a href="https://civitai.com/" target="_blank">https://civitai.com/</a> </li>
+<li>Compel - A text prompt weighting and blending library for transformers-type text embedding systems : <a href="https://github.com/damian0815/compel" target="_blank">https://github.com/damian0815/compel</a></li>
 </ul>
 <p><strong>Models used</strong>:  </p>
 <ul>
-<li>Falconsai/nsfw_image_detection -  Fine-Tuned Vision Transformer (ViT) for NSFW Image Classification: <a href="https://huggingface.co/Falconsai/nsfw_image_detection">https://huggingface.co/Falconsai/nsfw_image_detection</a>  </li>
-<li>stabilityai/sd-x2-latent-upscaler - Stable Diffusion x2 latent upscaler : <a href="https://huggingface.co/stabilityai/sd-x2-latent-upscaler">https://huggingface.co/stabilityai/sd-x2-latent-upscaler</a></li>
+<li>Falconsai/nsfw_image_detection -  Fine-Tuned Vision Transformer (ViT) for NSFW Image Classification: <a href="https://huggingface.co/Falconsai/nsfw_image_detection target="_blank">https://huggingface.co/Falconsai/nsfw_image_detection</a>  </li>
+<li>stabilityai/sd-x2-latent-upscaler - Stable Diffusion x2 latent upscaler : <a href="https://huggingface.co/stabilityai/sd-x2-latent-upscaler target="_blank"">https://huggingface.co/stabilityai/sd-x2-latent-upscaler</a></li>
 </ul>
-<p><strong>Latent Consistency Models (LCM) LoRA</strong> :<br>A universal Stable-Diffusion Acceleration Module by: Simian Luo, Yiqin Tan, Suraj Patil, Daniel Gu et al. : <a href="https://huggingface.co/latent-consistency">https://huggingface.co/latent-consistency</a>  </p>
+<p><strong>Latent Consistency Models (LCM) LoRA</strong> :<br>A universal Stable-Diffusion Acceleration Module by: Simian Luo, Yiqin Tan, Suraj Patil, Daniel Gu et al. :
+<a href="https://huggingface.co/latent-consistency" target="_blank">https://huggingface.co/latent-consistency</a>  </p>
 <ul>
-<li>SD Model: latent-consistency/lcm-lora-sdv1-5  : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdv1-5">https://huggingface.co/latent-consistency/lcm-lora-sdv1-5</a>  </li>
-<li>SDXL Model: latent-consistency/lcm-lora-sdxl : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdxl">https://huggingface.co/latent-consistency/lcm-lora-sdxl</a></li>
+<li>SD Model: latent-consistency/lcm-lora-sdv1-5  : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdv1-5 target="_blank">https://huggingface.co/latent-consistency/lcm-lora-sdv1-5</a>  </li>
+<li>SDXL Model: latent-consistency/lcm-lora-sdxl : <a href="https://huggingface.co/latent-consistency/lcm-lora-sdxl target="_blank">https://huggingface.co/latent-consistency/lcm-lora-sdxl</a></li>
 </ul>
-<p><strong>ControlNet</strong>:<br>ControlNet : <a href="https://huggingface.co/lllyasviel">https://huggingface.co/lllyasviel</a><br>Github: <a href="https://github.com/lllyasviel/ControlNet">https://github.com/lllyasviel/ControlNet</a><br>Read the ControlNet Blog for more: <a href="https://huggingface.co/blog/controlnet">https://huggingface.co/blog/controlnet</a>  </p>
-<p><strong>ControlNet Models used</strong>:<br>MLSD Line Detection: lllyasviel/sd-controlnet-mlsd : <a href="https://huggingface.co/lllyasviel/sd-controlnet-mlsd">https://huggingface.co/lllyasviel/sd-controlnet-mlsd</a><br>HED Edge Detection: lllyasviel/sd-controlnet-hed : <a href="https://huggingface.co/lllyasviel/sd-controlnet-hed">https://huggingface.co/lllyasviel/sd-controlnet-hed</a><br>Depth Estimation: lllyasviel/sd-controlnet-depth : <a href="https://huggingface.co/lllyasviel/sd-controlnet-depth">https://huggingface.co/lllyasviel/sd-controlnet-depth</a><br>Scribble: lllyasviel/sd-controlnet-scribble : <a href="https://huggingface.co/lllyasviel/sd-controlnet-scribble">https://huggingface.co/lllyasviel/sd-controlnet-scribble</a><br>Canny: lllyasviel/sd-controlnet-canny : <a href="https://huggingface.co/lllyasviel/sd-controlnet-canny">https://huggingface.co/lllyasviel/sd-controlnet-canny</a><br>Normal Map Estimation: lllyasviel/sd-controlnet-normal : <a href="https://huggingface.co/lllyasviel/sd-controlnet-normal">https://huggingface.co/lllyasviel/sd-controlnet-normal</a><br>Image Segmentation: lllyasviel/sd-controlnet-seg : <a href="https://huggingface.co/lllyasviel/sd-controlnet-seg">https://huggingface.co/lllyasviel/sd-controlnet-seg</a><br>OpenPose: lllyasviel/sd-controlnet-openpose : <a href="https://huggingface.co/lllyasviel/sd-controlnet-openpose">https://huggingface.co/lllyasviel/sd-controlnet-openpose</a>  </p>
+<p><strong>ControlNet</strong>:<br>ControlNet : <a href="https://huggingface.co/lllyasviel" target="_blank">https://huggingface.co/lllyasviel</a><br>Github: <a href="https://github.com/lllyasviel/ControlNet" target="_blank">https://github.com/lllyasviel/ControlNet</a><br>Read the ControlNet Blog for more: <a href="https://huggingface.co/blog/controlnet">https://huggingface.co/blog/controlnet</a>  </p>
+<p><strong>ControlNet Models used</strong>:<br>MLSD Line Detection: lllyasviel/sd-controlnet-mlsd : <a href="https://huggingface.co/lllyasviel/sd-controlnet-mlsd" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-mlsd</a><br>HED Edge Detection: lllyasviel/sd-controlnet-hed : <a href="https://huggingface.co/lllyasviel/sd-controlnet-hed" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-hed</a><br>Depth Estimation: lllyasviel/sd-controlnet-depth : <a href="https://huggingface.co/lllyasviel/sd-controlnet-depth" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-depth</a><br>Scribble: lllyasviel/sd-controlnet-scribble : <a href="https://huggingface.co/lllyasviel/sd-controlnet-scribble" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-scribble</a><br>Canny: lllyasviel/sd-controlnet-canny : <a href="https://huggingface.co/lllyasviel/sd-controlnet-canny" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-canny</a><br>Normal Map Estimation: lllyasviel/sd-controlnet-normal : <a href="https://huggingface.co/lllyasviel/sd-controlnet-normal" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-normal</a><br>Image Segmentation: lllyasviel/sd-controlnet-seg : <a href="https://huggingface.co/lllyasviel/sd-controlnet-seg" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-seg</a><br>OpenPose: lllyasviel/sd-controlnet-openpose : <a href="https://huggingface.co/lllyasviel/sd-controlnet-openpose" target="_blank">https://huggingface.co/lllyasviel/sd-controlnet-openpose</a>  </p>
 <p><strong>Other Thanks</strong>:<br>My Wife, and my family, who left me alone... with quiet... long enough to finish.</p>
 <br>
 <a href="#top">Back to Top</a> | <a href="#qindex">Quick Index</a>
@@ -414,7 +436,7 @@ Thanks for trying LCM-LoRA Studio v1.3.
 
 Feel free to use, install, share, hack and enjoy !  
 
-Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a>
+Copyright (C) 2025-present <a href="https://rockstevens.com" target="_blank">Rock Stevens</a>
 
 
 
