@@ -2,7 +2,7 @@
 
 # ---------------------------------------------------
 # ---------------LCM-LoRA Studio---------------------
-# -----------------Version 1.3-----------------------
+# -----------------Version 1.3a----------------------
 # ---------------------------------------------------
 
 
@@ -127,13 +127,6 @@ from transformers import CLIPTextModel
 # # to not get it confused with the global 'pipeline' for our main model pipeline
 # from transformers import pipeline
 
-# # ---------------------------------
-# # rknote do we still use this?
-# # for download single file from URL
-# # was to be used by download safetensors file from url...
-# # but download straight from some sites, need an API key so, will not work
-# # may use in future for future mod
-# import requests
 
 # ----------------------------------------
 # for date/time in image filename
@@ -190,7 +183,7 @@ except ImportError:
 
 # --------------------------------------------------------
 # - this was to overcome no server till logged in, 
-# - so i loaded the logo to a base64...
+# - so i loaded the login logo to a base64...
 import base64
 
 
@@ -1368,7 +1361,7 @@ def device_select():
 def set_freeu_values(ins1, ins2, inb1, inb2):
     #rkconvert - NOT DONE
     if int(SDPIPELINE['pipeline_loaded']) < 1:
-        gr.Info("<h4>No Model Loaded. Please Load a Model First.</h4><h4>Select the tab 'Pipeline - Models' to load a model into the pipeline.</h4>", duration=3.0, title="FreeU Settings")
+        grinfo_no_model_loaded()
         return ins1, ins2, inb1, inb2
  
     if (SDPIPELINE['pipeline_model_type']=="SDXL"):
@@ -4155,6 +4148,13 @@ def upscale_image(
     # clear both gradio outputs [progress/text,img]
     yield gr.update(value=None), gr.update(value=None)
 
+    pipeline_args = {}
+    pipeline_args["safety_checker"] = None
+    pipeline_args["requires_safety_checker"] = False
+    if STUDIO["local_files_only"]["value"]: 
+        pipeline_args["local_files_only"] = True
+    pipeline_args["device"] = LLSTUDIO["device"]
+
     gr.Info("Loading SD Upscale 2X Model...", duration=3.0, title="Upscale Model")
     if (int(SDPIPELINE['pipeline_loaded']) > 0 and SDPIPELINE['pipeline_class'] == "StableDiffusionLatentUpscalePipeline" and SDPIPELINE['pipeline_model_name'] == STUDIO["sdupscale2x_model_name"]["value"] and SDPIPELINE['pipeline_gen_mode'] == "2x UpScaler"):
         SDPIPELINE['pipeline_class'] = "StableDiffusionLatentUpscalePipeline"
@@ -4165,14 +4165,14 @@ def upscale_image(
         gr.Info("2x Upscale Model Already Loaded.", duration=3.0, title="2x Upscale Model")
     else:
         try:
-            pipeline = StableDiffusionLatentUpscalePipeline.from_pretrained(STUDIO["sdupscale2x_model_name"]["value"], local_files_only=True, safety_checker = None, requires_safety_checker = False, device=LLSTUDIO["device"])
+            pipeline = StableDiffusionLatentUpscalePipeline.from_pretrained(STUDIO["sdupscale2x_model_name"]["value"], **pipeline_args)
             SDPIPELINE['pipeline_class'] = "StableDiffusionLatentUpscalePipeline"
             SDPIPELINE['pipeline_loaded'] = 1
             SDPIPELINE['pipeline_model_name'] = STUDIO["sdupscale2x_model_name"]["value"]
             SDPIPELINE['pipeline_source'] = "HUB"
             SDPIPELINE['pipeline_gen_mode'] = "2x UpScaler"
             gr.Info("Finished Loading SD Upscale 2X Model.", duration=3.0, title="Upscale Model")
-        except Exception as e: # Catch any other unexpected exceptions
+        except Exception as e:
             tempout = "<h3>Error Loading: " + SDPIPELINE['pipeline_gen_mode'] + " Model." + f"<br>{e}" + "</h3>"
             yield gr.update(value=tempout)
             gr.Info("<h3>Error Loading: " + SDPIPELINE['pipeline_gen_mode'] + " Model."  + f"<br>{e}" + "</h3>", duration=3.0, title="2x Upscale Model")
@@ -5111,7 +5111,7 @@ def send_to_gallery():
             stdoutput = stdoutput + "Error: Source and destination files are the same."
         except OSError as e: # Catch other potential OS errors
             stdoutput = stdoutput + f"An OS error occurred: {e}"
-        except Exception as e: # Catch any other unexpected exceptions
+        except Exception as e:
             stdoutput = stdoutput + f"An unexpected error occurred: {e}"
 
         # do last prompt
@@ -5126,7 +5126,7 @@ def send_to_gallery():
             stdoutput = stdoutput + "Error: Source and destination files are the same."
         except OSError as e: # Catch other potential OS errors
             stdoutput = stdoutput + f"An OS error occurred: {e}"
-        except Exception as e: # Catch any other unexpected exceptions
+        except Exception as e:
             stdoutput = stdoutput + f"An unexpected error occurred: {e}"
     
     else:
@@ -5161,7 +5161,7 @@ def send_to_gallery():
             stdoutput = stdoutput + "Error: Source and destination files are the same."
         except OSError as e: # Catch other potential OS errors
             stdoutput = stdoutput + f"An OS error occurred: {e}"
-        except Exception as e: # Catch any other unexpected exceptions
+        except Exception as e:
             stdoutput = stdoutput + f"An unexpected error occurred: {e}"
 
         # do last prompt
@@ -5176,7 +5176,7 @@ def send_to_gallery():
             stdoutput = stdoutput + "Error: Source and destination files are the same."
         except OSError as e: # Catch other potential OS errors
             stdoutput = stdoutput + f"An OS error occurred: {e}"
-        except Exception as e: # Catch any other unexpected exceptions
+        except Exception as e:
             stdoutput = stdoutput + f"An unexpected error occurred: {e}"
 
     return stdoutput
@@ -5388,20 +5388,82 @@ def delete_pipeline():
         grinfo_no_model_loaded()
         return tempout
         
+    # is a model loaded?, if there is, kill any loRAs, then kill peline and do gc, 
     if hasattr(pipeline, 'to') and callable(getattr(pipeline, 'to')):
         pipeline.to(LLSTUDIO["device"])
-    del pipeline
-    gc.collect()
+        if len(LLSTUDIO["loaded_lora_model_adapter"]) > 0:
+            if int(STUDIO["app_debug"]["value"]) > 0: print ("Unloading LoRA Adapters...")
+            tempout = "<h3>Unloading LoRA Weights...</h3>"
+            yield gr.update(value=tempout)
+            pipeline.unload_lora_weights() 
+            adapter_names = pipeline.get_active_adapters()
+            tempout = "<h3>Deleting LoRA Adapters...</h3>"
+            yield gr.update(value=tempout)
+            pipeline.delete_adapters(adapter_names)
+            LLSTUDIO["loaded_lora_model_value"]=[]
+            LLSTUDIO["loaded_lora_model_name"]=[]
+            LLSTUDIO["loaded_lora_model_adapter"]=[]
+            LLSTUDIO["lora_adapter_numb"] = 0
+            tempout = "<h3>Unloaded Weights and Deleted LoRA Adapters.</h3>"
+            yield gr.update(value=tempout)
+            if int(STUDIO["app_debug"]["value"]) > 0: print ("Finished Unloading and Deleting LoRA Adapters.")
+        else:
+            if int(STUDIO["app_debug"]["value"]) > 0: print ("No LoRA Models Loaded to Unload.")
+         
+        del pipeline
+        gc.collect()
 
-    reset_pipeline_info()
-    tempout = "<h3>Unloaded Pipeline, Ready to Load a Model.</h3>"
-    yield gr.update(value=tempout)
-    gr.Info("<h3>Unloaded Pipeline, Ready to Load a Model.</h3>", duration=3.0, title="Unload Model")
+        reset_pipeline_info()
+        tempout = "<h3>Unloaded Pipeline, Ready to Load a Model.</h3>"
+        yield gr.update(value=tempout)
+        gr.Info("<h3>Unloaded Pipeline, Ready to Load a Model.</h3>", duration=3.0, title="Unloaded Model")
+        
     return tempout
 
 
 # ---------------------------------------------------------------
 # ---------------------------------------------------------------
+
+# rkadd - called after saving a LCM-LoRA model and before loading a model
+# should be called BEFORE setting model pipeline info
+def slient_delete_pipeline():
+    #rkconvert - NOT DONE
+    # rkpipeline FINISHED
+    global pipeline             # where the model is loaded to, convert/get_model_type uses private pipeline: piepline_xl
+
+    if int(SDPIPELINE['pipeline_loaded']) < 1:
+        pipeline = ""
+        if hasattr(pipeline, 'to') and callable(getattr(pipeline, 'to')):
+            pipeline.to(LLSTUDIO["device"])
+        del pipeline
+        gc.collect()
+        return 
+
+    # is a model loaded?, if there is, kill any loRAs, then kill peline and do gc, 
+    if hasattr(pipeline, 'to') and callable(getattr(pipeline, 'to')):
+        pipeline.to(LLSTUDIO["device"])
+        # unload rk style loras
+        if len(LLSTUDIO["loaded_lora_model_adapter"]) > 0:
+            pipeline.unload_lora_weights() 
+            adapter_names = pipeline.get_active_adapters()
+            pipeline.delete_adapters(adapter_names)
+            LLSTUDIO["loaded_lora_model_value"]=[]
+            LLSTUDIO["loaded_lora_model_name"]=[]
+            LLSTUDIO["loaded_lora_model_adapter"]=[]
+            LLSTUDIO["lora_adapter_numb"] = 0
+         
+    del pipeline
+    gc.collect()
+
+    reset_pipeline_info()
+    return 
+
+
+    
+
+
+
+
 # ---------------------------------------------------------------
 # ---------------------------------------------------------------
 # ------------------------------------------------------------
@@ -5519,7 +5581,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
         
             tempout = "<h3>Finished Fusing LoRAs to Pipeline and LoRA Unloading Adapters.</h3>"
             yield gr.update(value=tempout)
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Fusing LoRAs to Pipeline Model. " + f"{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5538,7 +5600,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
             pipeline = pipeline.to(dtype=torch.float16)
         else:
             pipeline = pipeline.to(dtype=torch.float32)
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Converting Pipeline.to " + fp16_tempout + ". " + f"{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5557,7 +5619,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
     
     try:
         pipeline.save_pretrained(f"{new_lcm_model_filepathname}", **pipeline_args)
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Saving Pipeline to Model. " + f"{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5569,7 +5631,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
     else:
         SDPIPELINE["pipeline_model_precision"] = "fp32"
 
-    # create a model card (per say) for the image gallery for this specific LCM-LoRA Model
+    # create a model card (*.md) for this model and put it in the image gallery for this specific LCM-LoRA Model
     if not os.path.exists(model_image_path_file):
         os.makedirs(model_image_path_file)
         file1 = open(os.path.join(model_image_path_file, new_lcm_model_filename) + ".md", 'w')
@@ -5581,11 +5643,26 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
         file1.close()    
 
     
-    tempout = "<h3>" + "Finished Saving Pipeline Loaded with " + old_model_name + " to LCM-LoRA model " + new_lcm_model_filename + "</h3>" + "LoRAs: </br>" + get_loaded_lora_models_html()
+    tempout = "<h3>" + "Finished Saving New Model: " + new_lcm_model_filename + "</h3><h3>Re-Initializing Pipeline for Model Loading...</h3>"
     yield gr.update(value=tempout)
+
+    slient_delete_pipeline()
+
+    tempout = "<h3>Initialized Pipeline for Model Loading...</h3>"
+    tempout = tempout + "<h3>Finished Saving Pipeline Loaded with " + old_model_name + " to LCM-LoRA model " + new_lcm_model_filename + "</h3>LoRAs: </br>" + get_loaded_lora_models_html()
+    tempout = tempout + "<p>To use your New Model: " + new_lcm_model_filename + "</p>"
+    tempout = tempout + "<p>Click on the 'Pipeline - Models' tab, then Click on the'LCM-LoRA Model List' tab. Once there, Click on the 'Refresh' button on the right, to update the LCM-LoRA Model list in the dropdown box</p>"
+    tempout = tempout + "<p>Then select your New Model from the list, then Click the 'Load' button on the right to load the model.</p>"
+    yield gr.update(value=tempout)
+
+
     return tempout
 
 
+
+
+
+# ------------------------------------------------------------
 # ------------------------------------------------------------
 # ---------------------------------------------------------------
 # ---------------------------------------------------------------
@@ -5597,9 +5674,14 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
     global pipeline             # where the model is loaded to, convert/get_model_type uses private pipeline: piepline_xl
     
     pstart = time.time()
-    
-    tempout = "<h3>Loading Model... " + model_name + "</h3>"
+
+    tempout = "<h3>Loading Model: " + model_name + "<br>Initializing Pipeline...</h3>"
     yield gr.update(value=tempout)
+    slient_delete_pipeline()
+    tempout = "<h3>Pipeline Initialized.<br>Loading Model: " + model_name + "</h3>"
+    yield gr.update(value=tempout)
+
+    
 
     model_path_file = get_lcm_model_path_file(model_name)
     model_config_filename = os.path.join(model_path_file, "model_index.json")
@@ -5677,7 +5759,7 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
                 try:
                     text_encoder = transformers.CLIPTextModel.from_pretrained(get_lcm_model_path_file(text_enc_model_name), **text_enc_pipeline_args)
                     pipeline_args["text_encoder"] = text_encoder
-                except Exception as e: # Catch any other unexpected exceptions
+                except Exception as e:
                     tempout = "<h3>Error Loading Seperate Text Encoder: " + text_enc_model_name + f"<br>{e}" + "</h3>"
                     yield gr.update(value=tempout)
                     return tempout
@@ -5708,7 +5790,7 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
             # if any controlnets got loaded we add the argument for the controlnet(s)    
             if len(controlnet) > 0:
                 # 2. add to a dictionary with the controlnet arguments
-                # this one argument hadles one or more (list[]) of controlnets :)
+                # this one argument handles one or more (list[]) of controlnets :)
                 pipeline_args["controlnet"] = controlnet
             
                 # by changing the pipeline class we can load model with the rest of them...
@@ -5746,7 +5828,7 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
             tempout = "<h3>Error - No Pipeline Recognized for model: " + SDPIPELINE['pipeline_model_name'] + "</h3>"
             yield gr.update(value=tempout)
             return tempout
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Loading: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5754,7 +5836,7 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
 
     try:
         pipeline.to(LLSTUDIO["device"])
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Moving TO device??: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5807,6 +5889,12 @@ def load_hub_model(model_name, fp16_check, lora_value, add_lcmlora):
         tempout = "<h3>Error: MUST Enter valid model name... " + model_name + "</h3>"
         yield gr.update(value=tempout)
         return tempout   
+
+    tempout = "<h3>Loading Model: " + model_name + "<br>Initializing Pipeline...</h3>"
+    yield gr.update(value=tempout)
+    slient_delete_pipeline()
+    tempout = "<h3>Pipeline Initialized.<br>Loading Model: " + model_name + "</h3>"
+    yield gr.update(value=tempout)
 
     try:
         hex40str = get_file_content(os.path.join(get_hub_model_path_file(model_name), "refs", "main"))
@@ -5875,14 +5963,14 @@ def load_hub_model(model_name, fp16_check, lora_value, add_lcmlora):
             tempout = "<h3>Error - No Pipeline Recognized for model: " + SDPIPELINE['pipeline_model_name'] + "</h3>"
             yield gr.update(value=tempout)
             return tempout
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Loading: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
 
     try:
         pipeline.to(LLSTUDIO["device"])
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Moving TO device??: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -5936,7 +6024,11 @@ def load_hug_model(model_name, model_class_name, fp16_check):
         tempout = "<h3>Error: MUST Enter valid model name... " + model_name + "</h3>"
         yield gr.update(value=tempout)
         return tempout   
-    tempout = "<h3>Loading Model... " + model_name + "</h3>"
+
+    tempout = "<h3>Loading Model: " + model_name + "<br>Initializing Pipeline...</h3>"
+    yield gr.update(value=tempout)
+    slient_delete_pipeline()
+    tempout = "<h3>Pipeline Initialized.<br>Loading Model: " + model_name + "</h3>"
     yield gr.update(value=tempout)
 
     pipe_class = model_class_name
@@ -5995,14 +6087,14 @@ def load_hug_model(model_name, model_class_name, fp16_check):
             yield gr.update(value=tempout)
             return tempout
 
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Loading: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
 
     try:
         pipeline.to(LLSTUDIO["device"])
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Moving TO device??: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + SDPIPELINE['pipeline_model_name'] + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
@@ -6033,6 +6125,15 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
     global pipeline             # where the model is loaded to, convert/get_model_type uses private pipeline: piepline_xl
     safetensors_model_pathfile = os.path.join(LLSTUDIO["safe_model_dir"], safetensors_model + ".safetensors")
     pstart = time.time()
+
+    tempout = "<h3>Loading Model: " + safetensors_model + "<br>Initializing Pipeline...</h3>"
+    yield gr.update(value=tempout)
+    slient_delete_pipeline()
+    tempout = "<h3>Pipeline Initialized.<br>Loading Model: " + safetensors_model + "</h3>"
+    yield gr.update(value=tempout)
+
+
+
     SDPIPELINE['pipeline_model_name'] = safetensors_model
     SDPIPELINE['pipeline_class'] = pipe_class
     SDPIPELINE['pipeline_source'] = "Safetensors"
@@ -6055,40 +6156,56 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
     # use 'original_config_file' when loading the safetensors model
     if STUDIO["safe_use_original_config_file"]["value"]:
         if SDPIPELINE['pipeline_class'] == "StableDiffusionPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SD_original_config"]["value"])   
+            if len(STUDIO["SD_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SD_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXL_original_config"]["value"])   
+            if len(STUDIO["SDXL_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXL_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionImage2Image":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDImage2Image_original_config"]["value"])   
+            if len(STUDIO["SDImage2Image_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDImage2Image_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLImage2Image":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLImage2Image_original_config"]["value"])   
+            if len(STUDIO["SDXLImage2Image_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLImage2Image_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionInpaintPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDInpaint_original_config"]["value"])   
+            if len(STUDIO["SDInpaint_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDInpaint_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLInpaintPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLInpaint_original_config"]["value"])   
+            if len(STUDIO["SDXLInpaint_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLInpaint_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionInstructPix2PixPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDInstructPix2Pix_original_config"]["value"])   
+            if len(STUDIO["SDInstructPix2Pix_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDInstructPix2Pix_original_config"]["value"])   
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLInstructPix2PixPipeline":
-            pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLInstructPix2Pix_original_config"]["value"])   
+            if len(STUDIO["SDXLInstructPix2Pix_original_config"]["value"]) > 0:
+                pipeline_args["original_config"] = os.path.join(".", "configs", STUDIO["SDXLInstructPix2Pix_original_config"]["value"])   
 
     # use a reference model when loading the safetensors model
     if STUDIO["safe_use_config"]["value"]:
         if SDPIPELINE['pipeline_class'] == "StableDiffusionPipeline":
-            pipeline_args["config"] = STUDIO["SD_config"]["value"] 
+            if len(STUDIO["SD_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SD_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLPipeline":
-            pipeline_args["config"] = STUDIO["SDXL_config"]["value"] 
+            if len(STUDIO["SDXL_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDXL_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionImage2Image":
-            pipeline_args["config"] = STUDIO["SDImage2Image_config"]["value"] 
+            if len(STUDIO["SDImage2Image_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDImage2Image_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLImage2Image":
-            pipeline_args["config"] = STUDIO["SDXLImage2Image_config"]["value"] 
+            if len(STUDIO["SDXLImage2Image_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDXLImage2Image_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionInpaintPipeline":
-            pipeline_args["config"] = STUDIO["SDInpaint_config"]["value"] 
+            if len(STUDIO["SDInpaint_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDInpaint_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLInpaintPipeline":
-            pipeline_args["config"] = STUDIO["SDXLInpaint_config"]["value"] 
+            if len(STUDIO["SDXLInpaint_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDXLInpaint_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionInstructPix2PixPipeline":
-            pipeline_args["config"] = STUDIO["SDInstructPix2Pix_config"]["value"] 
+            if len(STUDIO["SDInstructPix2Pix_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDInstructPix2Pix_config"]["value"] 
         elif SDPIPELINE['pipeline_class'] == "StableDiffusionXLInstructPix2PixPipeline":
-            pipeline_args["config"] = STUDIO["SDXLInstructPix2Pix_config"]["value"] 
+            if len(STUDIO["SDXLInstructPix2Pix_config"]["value"]) > 0:
+                pipeline_args["config"] = STUDIO["SDXLInstructPix2Pix_config"]["value"] 
 
 
  
@@ -6118,14 +6235,14 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
             tempout = "<h3>Error - No Pipeline Recognized for model: " + safetensors_model + "</h3>"
             yield gr.update(value=tempout)
             return tempout
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Loading: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + safetensors_model + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
         return tempout
 
     try:
         pipeline.to(LLSTUDIO["device"])
-    except Exception as e: # Catch any other unexpected exceptions
+    except Exception as e:
         tempout = "<h3>Error Moving TO device??: " + SDPIPELINE['pipeline_model_type'] + " Model for " + SDPIPELINE['pipeline_gen_mode'] + ": " + safetensors_model + f"<br>{e}" + "</h3>"
         yield gr.update(value=tempout)
     
@@ -7192,8 +7309,8 @@ def save_lcm_model_edit(modelname, content):
 
 def save_lcm_model_view(modelname, content):
     #rkconvert - NOT DONE
-    gr.Info("<h3>View Model Card DISABLED !!</h3>", duration=3.0, title="View Model Card")
-    return "View Model Card DISABLED !!"
+    # gr.Info("<h3>View Model Card DISABLED !!</h3>", duration=3.0, title="View Model Card")
+    # return "View Model Card DISABLED !!"
     #rkconvert - NOT DONE
     mdl_filename = (os.path.join(LLSTUDIO["lcm_model_image_dir"],modelname,modelname + '.md'))
     if mdl_filename:
@@ -10255,7 +10372,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
     # Save LCM-LoRA Model section
     save_lcm_model_clear_button.click(clear_lcm_model, inputs=[], outputs=[save_lcm_model_txt, save_lcm_model_lora_scale, save_lcm_model_html])
-    save_lcm_model_save_button.click(save_lcm_model, inputs=[save_lcm_model_txt, save_lcm_model_lora_scale,save_lcm_model_as_safetensors_check, save_lcm_model_fp16_check], outputs=[save_lcm_model_html])
+    save_lcm_model_save_button.click(save_lcm_model, inputs=[save_lcm_model_txt, save_lcm_model_lora_scale,save_lcm_model_as_safetensors_check, save_lcm_model_fp16_check], outputs=[save_lcm_model_html]).then(str_no_model_loaded, None, model_list_html)
 
 
 # ------------------------------------------------------------------------------------------------------------------

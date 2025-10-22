@@ -7,7 +7,7 @@ import json
 # ---------------------------------------------------
 
 # ###############################################
-# #    GLOBAL DICTS for LCM-LoRA Studio  v1.3   #
+# #    GLOBAL DICTS for LCM-LoRA Studio  v1.3a  #
 # ###############################################
 
 STUDIO = {
@@ -766,7 +766,7 @@ For more information, please have a look at https://github.com/huggingface/diffu
 # which is the full (drive/root) path to folder where the LoRA models are.
 LLSTUDIO = {
     "app_title": "LCM-LoRA Studio",
-    "app_version": "v1.3",
+    "app_version": "v1.3a",
     "app_author": "Rock Stevens",
     "app_url": "rockstevens.com/lcm-lora-studio",
     "app_github": "github.com/rock-stevens/lcm-lora-studio",

@@ -1,0 +1,56 @@
+## LCM-LoRA-Studio Versions
+
+Current Version: 1.3a
+
+----
+
+### Version History
+
+FIX: 	LCM-LoRA-Studio v1.3a
+
+FIX:    LoRA Weights and LoRA Adapters were not getting unloaded and deleted when you click the 'Delete Model' button.
+	Note: LoRA Adapters still could/can be deleted under the 'Add LoRA Models' tab. So this FIX is to prevent errors 
+	caused by the user not unloading LoRAs 'before' deleting and/or loading another model.
+		
+FIX:	'Original Config' file and 'Reference model' for loading Single FIle Safetensors model types 
+	now accounts for empty fields in the settings. As so there should be, because for the 'Original Config' 
+	file, SDXL does not use them. So the user would have to go into settings and make sure that 
+	option was un-chcecked before trying to load a model for a pipeline there is not a 
+	'Original Config' file for. (I have those obvious not used fields for future expansion.)
+		
+	Now ignores all 'empty' fields in the settings for both 'Original Config' files and 'Reference models'. 
+	Now the user can mostly leave 'Use Original Config' checked and just un-check it only when certain models refuse to load.
+
+
+FIX:	Refreshed code comments which were left in since early production.
+
+	
+----
+
+Public Release: LCM-LoRA-Studio v1.3
+
+Final Code Base
+
+----
+
+
+Beta Release: LCM-LoRA-Studio v1.2
+
+Advanced UI, Dynamic Settings
+
+----
+
+
+Alpha Release: LCM-LoRA-Studio v1.1
+
+More Robust UI, Dynamic models, Settings
+Minus - Custom RK Pipeline
+
+----
+
+Concept Release: v1sb 
+Core, SD, OV, ONNX, Custom RK Pipeline, inference, model loading-converting-saving
+Simple UI
+
+----
+
