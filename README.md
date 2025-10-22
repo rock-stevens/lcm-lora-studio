@@ -1,5 +1,6 @@
 <A id="top"></a>
 # LCM-LoRA Studio
+ Version 1.3a
   
 ![LCM-LoRA Studio](help/lcm-lora-studio-app-header.png)  
   
