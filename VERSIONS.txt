@@ -44,7 +44,7 @@ Advanced UI, Dynamic Settings
 Alpha Release: LCM-LoRA-Studio v1.1
 
 More Robust UI, Dynamic models, Settings
-Minus - Custom RK Pipeline
+Minus - Custom RK Pipeline, OV, ONNX
 
 ----
 
@@ -53,4 +53,5 @@ Core, SD, OV, ONNX, Custom RK Pipeline, inference, model loading-converting-savi
 Simple UI
 
 ----
+
 
