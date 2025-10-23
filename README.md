@@ -16,7 +16,12 @@ step de-noising process. LCM-LoRA Studio was mainly written for PC's with no goo
 Raspberry Pi 5 (both 8GB and 16GB versions) as a first step, in order to reduce inference time while 
 still generating high-quality images.  
 And to create special LoRA 'baked-in' types of models, in an, 'all-in-one' application.   
+  
+##Note: This will currently not install on a Raspberry Pi5 with the lastest Raspberry Pi OS installed (Trixe).  
+It should install on previous repleases. And on Windows 10/11.   
 
+This issue is currently being solved, and will update on progress, once the issue is closed.
+  
 **Advantages:**
 * Greatly reduces image generation time.
 * Save loaded Pipeline as a New Model.
@@ -436,4 +441,5 @@ Copyright (C) 2025-present [Rock Stevens](https://rockstevens.com)
 <br>
 
 [Back to Top](#top) | [Quick Index](#qindex)
+
 
