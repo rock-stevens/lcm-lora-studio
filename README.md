@@ -17,7 +17,7 @@ Raspberry Pi 5 (both 8GB and 16GB versions) as a first step, in order to reduce 
 still generating high-quality images.  
 And to create special LoRA 'baked-in' types of models, in an, 'all-in-one' application.   
   
-##Note: This will currently not install on a Raspberry Pi5 with the lastest Raspberry Pi OS installed (Trixe).  
+## Note: This will currently not install on a Raspberry Pi5 with the lastest Raspberry Pi OS installed (Trixe).  
 It should install on previous repleases. And on Windows 10/11.   
 
 This issue is currently being solved, and will update on progress, once the issue is closed.
@@ -441,5 +441,6 @@ Copyright (C) 2025-present [Rock Stevens](https://rockstevens.com)
 <br>
 
 [Back to Top](#top) | [Quick Index](#qindex)
+
 
 
