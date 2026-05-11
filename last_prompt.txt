@@ -1,0 +1,14 @@
+a tall waterfall running down a hill into a pond, surrounded by lush plants, colorful tropical flowers and tall trees, with the trees slightly blocking a sunny day, photo realistic, hyperdetailed
+
+blurry, out of focus, poorly drawn, anime, cartoon, low resolution, bad anatomy, bad fingers, bad eyes, bad arms
+
+Steps: 4, CFG scale: 1, Seed: 2928344041, Size: 512x512
+Pipeline: StableDiffusionPipeline
+Model Loaded From: LCMLORA
+Model Type: SD15
+Model: LCM_epicDiffusionReal_v2
+Loaded LoRA Adapters: 0
+Image Filename: LCMLORA_2928344041_1_260511112128_693219.png
+Inference Time: 01 minutes, 28 seconds
+Generation Method: Text to Image
+Prompt Type: Embedded Prompts Pad Same Length

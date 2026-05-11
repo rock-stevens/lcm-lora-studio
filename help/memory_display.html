@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <title>LCM-LoRA Studio - Help - Memory Display</title>
+        <style>
+            body {
+                background-color: #222222; /* Sets the background to black */
+                color: #aaaaaa;             /* Sets the default text color to orange */
+            }
+			/* Group all link states together and set the color */
+			a,
+			a:link,
+			a:visited,
+			a:hover,
+			a:active,
+			a:focus {
+				color: #cc6644; /* Sets all links to the same gray color */
+				text-decoration: underline; /* Optional: Keep underline for links */
+			}
+        </style>
+    </head>
+<body>
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio v1.5 - Help - Memory Display</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+</ul>
+</p>
+<hr width="95%">
+
+<p>The Memory Display was added with v1.5 to show memory and swap usage.</p>
+
+<img src="lcm-lora-studio-mem-display.png"><br>
+
+<p><img src="mem_refresh.png"><br>
+Refresh Memory Display Only, just refreshes the display. Can be clicked most anytime, even during inference.
+</p>
+
+<p><img src="mem_free.png"><br>
+Refresh Display/Free Memory, Refreshes the display and tries to free as much memory.<br>
+<b>NOTE: <i>Continued clicking will not keep computer from crashing if you did not have enough RAM to begin with.</i> :)</b>
+
+</p>
+
+
+<p><img src="mem_refresh.png"><br>
+Delete Moodel/Pipeline, just clears the Pipeline and therefore frees up the memory that was being used.
+</p>
+
+<p>
+When you load any base model (not LoRA), save a base model (LCM-LoRA Model) or delete the pipeline, the memory is checked and any memory freed if possible.</br>
+So, you DO NOT need to keep clicking the 'Refresh Display/Free Memory' button !!</br>
+If you see the display turn <font color='#dd0000'>RED</font>, it's ok to hit it once or twice.
+</p>
+
+<br><br>
+
+
+
+
+<hr width="95%">
+<p>Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a></p>
+</body>
+</html>

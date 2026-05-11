@@ -1,0 +1,261 @@
+<html>
+    <head>
+        <title>LCM-LoRA Studio - Help - System Model Information</title>
+        <style>
+            body {
+                background-color: #222222; /* Sets the background to black */
+                color: #aaaaaa;             /* Sets the default text color to orange */
+            }
+			/* Group all link states together and set the color */
+			a,
+			a:link,
+			a:visited,
+			a:hover,
+			a:active,
+			a:focus {
+				color: #cc6644; /* Sets all links to the same gray color */
+				text-decoration: underline; /* Optional: Keep underline for links */
+			}
+        </style>
+    </head>
+<body>
+
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio v1.5 - Help - System Model Information</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+</ul>
+</p>
+<hr width="95%">
+
+
+<p>
+System Models are the models used to perform certain background operations in LCM-LoRA Studio.
+</p>
+<p>
+Most all programs simlar to this have them.
+</p>
+<p>
+For example, a model is used to perform a 'depth-map' operation using Transformers, where the output image is to be used as the input for a 'depth-map' type of ControlNet.<br>
+</p>
+<p>
+First, you need one model right now to  perform the 'depth-map' operation.
+<br>
+When you do perform the 'depth-map' operation, the program will load the model and perform the operation on your image.
+<br> 
+If you do not already have the model, it will be downloaded from Huggingface. It will then be stored in your Huggingface Cache Folder. If you already have the model in your Huggingface Cache Folder, it just loads it and uses it.
+</p>
+<p>
+This is the basic operation for loading all models you did not use this program to create and save. If a needed model is not in your Huggingface Cache, when the program tries to load it, the program goes and gets it. Once you have it, it will not need to be 'downloaded' again. Once you have them all, you can have 100% OFFLINE operation of LCM-LoRA Studio.
+<br>
+Models created and saved by this program via the 'Save LCM-LoRA Model' function, are not saved in the Huggingface Cache Folder because they did not come from Huggingface.
+</p>
+<p>
+After that, guess what??
+<br>
+You still need the 'depth' ControlNet model, and a base' model for inference. That's two more models. Which is three total, just to do a 'depth-map' type of ControlNet and make the input image for it.
+</p>
+<p>
+Note: The 'base' model is not counted as a 'System Model'. With the exception of a few base models like the Original SD1.5 and SDXL 1.0 models. They are base models, but they are also used as a reference model for so many other models, those are considered 'System' models as well. There are only a few that fall into this category, which are basically the 'first' model for any particular 'pipeline' Which can be used for image generation as well.
+</p>
+<p>
+In total there are 18 'System' models referenced, of these, 6 are 'base' models, which can also be used for inference.
+<br>
+There are 2 models which are the LoRA models you add to a pipeline to make it an LCM-LoRA type of model for the faster 4-step inference. One of those 2 LoRA models are added for SD 'base' models, and the other for SDXL 'base' models.
+</p>
+<p>
+The rest of the 'system' models are for the ControlNet pipline. One for each type of ControlNet.
+</p>
+<p>
+Here's a simple table describing all of the 'system' models and their use. NOTE: We only download Safetensors.
+</p>
+<p><b>WARNING</b>: <b><i>In total, they weigh in at around 105GB of storage space !!
+<br>
+Let me repeat that again: That is...</i> <font size="+2">105GB of storage space !!</font></b>
+</p>
+
+<p>
+<table cellpadding="3" cellspacing="3" border="1">
+<tr>
+<td><b>System/Base Model</b></td>
+<td><b>Huggingface Model Name</b></td>
+<td><b>Weight Type</b></td>
+<td><b>Approx<br>Size</b></td>
+<td><b>Function</b></td>
+<td><b>Description</b></td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>latent-consistency/lcm-lora-sdv1-5</td>
+<td>Single File<br>Safetensors type</td>
+<td>257 MB</td>
+<td>LoRA Model</td>
+<td>LoRA model for the faster 4-step inference SD only</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>latent-consistency/lcm-lora-sdxl</td>
+<td>Single File<br>Safetensors type</td>
+<td>377 MB</td>
+<td>LoRA Model</td>
+<td>LoRA model for the faster 4-step inference SDXL only</td>
+</tr>
+
+
+<tr>
+<td>System Model</td>
+<td>stabilityai/sd-x2-latent-upscaler</td>
+<td>fp32</td>
+<td>2.15 GB</td>
+<td>SD - Even though it's a System model it is<br>used as the Base model for X2 Upscaler</td>
+<td>X2 Upscaler Only</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>stable-diffusion-v1-5/stable-diffusion-v1-5</td>
+<td>fp16/fp32</td>
+<td>7.65 GB</td>
+<td>SD - Mainly a Base model, but used<br>as a reference model for SD</td>
+<td>Text to Image Generation<br>Image to Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>stabilityai/stable-diffusion-xl-base-1.0</td>
+<td>fp16/fp32</td>
+<td>19.8 GB</td>
+<td>SDXL - Mainly a Base model, but used<br>as a reference model for SDXL</td>
+<td>Text to Image Generation<br>Image to Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>stable-diffusion-v1-5/stable-diffusion-inpainting</td>
+<td>fp16/pickle?<br>We only use the fp16</td>
+<td>2.55 GB</td>
+<td>SD - Mainly a Base model, but used<br>as a reference model for SD Inpainting</td>
+<td>InPaint Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>diffusers/stable-diffusion-xl-1.0-inpainting-0.1</td>
+<td>fp16/fp32</td>
+<td>19.3 GB</td>
+<td>SDXL - Mainly a Base model, but used<br>as a reference model for SDXL Inpainting</td>
+<td>InPaint Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>timbrooks/instruct-pix2pix</td>
+<td>fp16/fp32</td>
+<td>7.65 GB</td>
+<td>SD - Mainly a Base model, but used<br>as a reference model for SD instruct-pix2pix</td>
+<td>Instruct Pix2Pix Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System/Base Model</td>
+<td>diffusers/sdxl-instructpix2pix-768</td>
+<td>fp16/fp32</td>
+<td>23.5 GB</td>
+<td>SDXL - Mainly a Base model, but used<br>as a reference model for SDXL instruct-pix2pix</td>
+<td>Instruct Pix2Pix Image Generation<br>Reference Model when needed</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-mlsd</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>M-LSD line detection</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-hed</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>HED edge detection</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-depth</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>Midas depth estimation</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-scribble</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>Hand drawn scribbles</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-canny</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>Canny edge detection</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-normal</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>Normal map</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-seg</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>Semantic segmentation</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>lllyasviel/sd-controlnet-openpose</td>
+<td>N/A</td>
+<td>1.34 GB</td>
+<td>ControlNet Model<br>Safetensors type</td>
+<td>OpenPose bone image</td>
+</tr>
+
+<tr>
+<td>System Model</td>
+<td>depth-estimation</td>
+<td>N/A</td>
+<td>1.27 GB</td>
+<td>Transformers<br>Safetensors type</td>
+<td>Creates a 'depth map' image, which<br>can be used with a ControlNet.</td>
+</tr>
+
+</table>
+
+</p>
+
+
+
+<hr width="95%">
+<p>Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a></p>
+</body>
+</html>
