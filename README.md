@@ -1,7 +1,17 @@
 <A id="top"></a>
 # LCM-LoRA Studio
  Version 1.3a
-  
+
+## UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!.
+### As soon as I get the repo updated. :)
+
+I am done and finalized my decisions, in a few days update the repo. 
+
+In the meantime I have removed the files from the repo at Github to keep from downloading something that does not work correctly.
+
+Thanks for everyone who has feed back and/or tried it. And your patience.
+
+
 ![LCM-LoRA Studio](help/lcm-lora-studio-app-header.png)  
   
 <a id="introduction"></a>
@@ -17,54 +27,6 @@ Raspberry Pi 5 (both 8GB and 16GB versions) as a first step, in order to reduce 
 still generating high-quality images.  
 And to create special LoRA 'baked-in' types of models, in an, 'all-in-one' application.   
   
-## Note: This will currently not install on a Raspberry Pi5 with the lastest Raspberry Pi OS installed (Trixe).  
-It should install on previous releases. And on Windows 10/11.   
-
-This issue is currently being solved, and will update on progress, once the issue is closed.  
-  
-----
-  
-After LOTS of testing, EVERY PyTorch version with EVERY Pi OS version...  
-  
-The problem simply lies in all the software problems we face when changing OS versions, language versions, updating software, upgrading, etc...  
-Stuff gets broken, or was depreciated, or a security issue was found which pretty much deems everything useless.  
-  
-In this particular case, Newer version of Python on Trixie will not install PyTorch 2.5.1, 
-which has a good memory footprint to run on an 8GB Pi5, compared to other versions on the Pi5 (before Trixie) using the same codebase. 
-But PyTorch 2.5.1 has a security issue, Critical vulnerability in PyTorch 2.5.1 (CVE-2025-32434), so we can not use that version.  
-  
-If we go with 2.7.1 or higher of PyTorch, PyTorch's memory footprint grows. Which on an 8GB Pi5 will not work out, without some/alot of re-arranging how the normal workflow goes using the Diffusers library which is what is using the PyTorch library to begin with. 
-So we try PyTorch 2.6.0, no security issues to date, so far fairly stable, memory footprint grown a tad I think from 2.5.1. It did not grow to anywhere near 2.7.1 and higher was. Could not even get one image out before it would run out of RAM.  
-  
-But 2.6.0 is still questionable. Which is why I decided to try DietPi.  
-Small, simple install setup, did not have Python and Git plus a few other things, but a sudo apt install... fixes that.
-Sp far worked ok, so far.  
-  
-One thing that upsets me is that I have been using this, and beating on it, for over 7 months, no problems on both an 8GB Pi5 and a 16GB Pi5. 
-Had only one problem in the begining, and bumped up the swap space a bit, problem solved.  
-  
-And now the brick wall.  
-  
-So, as I mentioned, I tried them ALL, with ALL Raspberry Pi OS's, plus DietPi.  
-Turned off most everything not needed to reclaim the precious RAM which IS the problem.  
-I even stripped out everything SDXL since not needed on an 8GB Pi5. Still RAM usage was terrible.  
-It's mainly the way diffusers/pytorch libraries handle memory management within the libraries themselves.  
-Also possible kernel or zram thing on Trixie. Lots of new, new, new on the release notes, and less, fix, fix.  
-But I'll be trying it on the future Trixie's too.  
-  
-So far it's narrowed down to this:  
-using PyTorch 2.6.0, with default Python version, or latest Python version in case of DietPi.  
-  
-Trixie 64bit Lite: No - uses 500-600MB of RAM when idle (Too much of a difference to bother with, plus lots of zram errors)  
-Bookworm 64bit Lite: Yes - uses 177-195MB of RAM when idle (Was developed and tested on 2024-11-19 Bookworm Lite)  
-DietPi: Yes - uses 98-110MB of RAM when idle (Worked the same as Bookworm, yet is Trixie based according to DietPi)  
-  
-Once I am done and finalize my decision in a day or two, and update everyone. It may take a week to get everything finished and uploaded. I will be rebuilding the requirements file and re-tweaking some code (I still got a few more ideas). In the meantime I have removed files from the repo at Github to keep from downloading something that does not work correctly.
-
-Thanks for everyone who has feed back and/or tried it. And your patience.
-
-
-
 
   
 **Advantages:**
