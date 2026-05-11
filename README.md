@@ -1,49 +1,39 @@
 <A id="top"></a>
 # LCM-LoRA Studio
- Version 1.3a
-
-## UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!.
-### As soon as I get the repo updated. :)
-
-I am done and finalized my decisions, in a few days update the repo. 
-
-In the meantime I have removed the files from the repo at Github to keep from downloading something that does not work correctly.
-
-Thanks for everyone who has feed back and/or tried it. And your patience.
-
-
+ Version 1.5
+  
 ![LCM-LoRA Studio](help/lcm-lora-studio-app-header.png)  
   
 <a id="introduction"></a>
 ## Introduction
+
+
+UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)
+
 
 ***Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.***  
   
 At it's basic core it generates images using common 
 StableDiffusion techniques. However add an LCM-LoRA to the base model and this enables a 4 Step inference 
 to generate images. This shorter number of steps allows us to generate images faster than the nomal 20-50 
-step de-noising process. LCM-LoRA Studio was mainly written for PC's with no good GPU, and the 
-Raspberry Pi 5 (both 8GB and 16GB versions) as a first step, in order to reduce inference time while 
-still generating high-quality images.  
+step de-noising process. LCM-LoRA Studio was mainly written for PC's with no good GPU, and the Raspberry Pi 5 as a first step, in order to reduce inference time while still generating high-quality images.  
 And to create special LoRA 'baked-in' types of models, in an, 'all-in-one' application.   
-  
 
-  
 **Advantages:**
 * Greatly reduces image generation time.
 * Save loaded Pipeline as a New Model.
 * Works with most existing fine-tuned Stable Diffusion SD/SDXL models, including custom checkpoints and other LoRAs.
-* Can be used with other LoRAs to generate specific styles or add structural guidance, with very little to no difference in inference speed.
+* Can be used with other LoRAs to generate specific styles or add structural guidance.
 * Can function 100% Offline ! (Once you have downloaded all the needed models.)
-* CPU with only 8G RAM for SD ! (16G RAM for SDXL)
-* With just a Raspberry Pi5 -OR- a modest computer with 8G RAM. You can generate great looking images.
+* CPU ONLY ! 
+* With just a Raspberry Pi 5 (8GB or 16GB version) -OR- a modest PC computer with 16G RAM. You can generate great looking images.
   
   
 **Design:**  
-This app is designed to address 2 issues that exist.  
+This app is designed to address these issues that exist.  
 1. I do not have a good GPU.  
 2. I do not have a high-end PC with tons of RAM.  
-  
+3. I do not have a high-end PC to shove a good GPU into, if I had one. 
   
 <a id="qindex"></a>
 ## Quick Index
@@ -133,7 +123,7 @@ See the block diagram below.
 * Embedded Prompts (Can be adjusted in settings.)
 * Prompt Weighting (uses the 'Compel' prompt weight library, also can be adjusted in settings.)
 * Prompt token length checking.
-* Paste Prompt Button, loads prompt from OS clipboard.
+
 
 **General Image Generation**
 * Live Inference Progress Bar During Generation. Shows Time, Current Inference Step.
@@ -145,9 +135,11 @@ See the block diagram below.
 * Uses Safety Checker via an Image Classification Model. (which can be disabled in settings if needed)
 * Auto Jump to 'Output Image Tab' when you click the 'Generate' button.
 * Saves Generation text-parameter file with generated image (PNG).
+* Use Diffusers FreeU settings, which improves image details by rebalancing the UNet's backbone and skip connection weights (Per Diffusers).
 
   
 **Models - Pipeline**
+* Load and Save the Model Pipeline. With or without LoRA weights.
 * Load SD and SDXL Local Previously Saved LCM-LoRA Models
 * Load SD and SDXL Local Huggingface 'Cache' Models - Auto filters out all non SD/SDXL models. (No LLMs, etc...)
 * Load SD and SDXL Huggingface Models (You can grab just the files needed, and it will load the model directly into the 'Pipeline', or the 'whole repository')
@@ -162,7 +154,6 @@ See the block diagram below.
 * Load (Add) 'multiple' LoRAs directly into the pipeline.
 * Change any loaded LoRAs weights, individualy.
 * "Bake" or "Merge" a LoRA into the Pipeline, then Save as an LCM-LoRA Model.
-* Load and Save the Model Pipeline. With or without LoRA weights.
 
 **General Features**
 
@@ -176,7 +167,7 @@ See the block diagram below.
 * Apply Gaussian, Horizontal and/or Vertical Motion Blur at any stage of image processing.
 * Send Proccessed Output Image Directly to either of the 2 ControlNet Image Input controls. (Then Switches to the ControlNet Tab.)
 * Access many 'Settings' which control LCM-LoRA Studio, as well as some of the backend and how models are loaded/handled.
-* Enable 'Use Authenticaion'. (Require a Login.)
+* Memory and Swap Space Display. (Always visible.)
 
 <br>
 
@@ -202,27 +193,20 @@ See the block diagram below.
 **Prompts**: Normal, no embedded prompts.  
 <br>
 
-| Operating System  | CPU                                   | RAM | Storage Type      | Time per iter | Total time | SD Model / Prec |
-|-------------------|---------------------------------------|-----|-------------------|---------------|------------|-----------------|
-| Windows 10 Pro    | Intel(R) Core(TM) i5-12500T @ 2.00GHz | 16G | USB 3.0 FLASH     | 6.34 s/it     | 48 s       | LCM-LoRA / FP16 |
-| Windows 11 Pro    | Intel(R) N95 @ (1.70 GHz)             | 8G  | USB 3.0 SSD       | 8.23 s/it     | 53 s       | LCM-LoRA / FP16 |
-| Windows 11 Pro    | Intel(R) N95 @ (1.70 GHz)             | 16G | USB 3.0 SSD       | 8.04 s/it     | 53 s       | LCM-LoRA / FP16 | 
-| Raspberry Pi OS   | Raspberry Pi 5                        | 8G  | Class10 SDCARD    | 14.61s/it     | 77 s       | LCM-LoRA / FP16 |
-| Raspberry Pi OS   | Raspberry Pi 5                        | 16G | PCIe 2.0 NVMe SSD | 13.19s/it     | 71 s       | LCM-LoRA / FP16 |
+NOTE: On an 8GB Raspberry Pi 5 you can only do SD. SDXL models are too big for just 8GB of RAM.
 
-*Inference time always goes up if there is an increase in, Image Size or CFG Scale, and SDXL models always take longer than SD models.*   
+
+| Operating System  | CPU                                   | RAM | Storage Type      | Time per iter | Total time | SD Model / Prec          |
+|-------------------|---------------------------------------|-----|-------------------|---------------|------------|--------------------------|
+| Windows 10 Pro    | Intel(R) Core(TM) i5-12500T @ 2.00GHz | 16G | USB 3.0 FLASH     | 6.34 s/it     | 48 s       | LCM-LoRA / FP16          |
+| Windows 11 Pro    | Intel(R) N95 @ (1.70 GHz)             | 16G | USB 3.0 SSD       | 8.04 s/it     | 53 s       | LCM-LoRA / FP16          | 
+| Raspberry Pi OS   | Raspberry Pi 5                        |  8G | Class10 SDCARD    | 13.75s/it     | 90 s       | LCM-LoRA / FP16 (SD Only)|
+| Raspberry Pi OS   | Raspberry Pi 5                        | 16G | PCIe 2.0 NVMe SSD | 13.19s/it     | 71 s       | LCM-LoRA / FP16          |
+
+*Inference time and RAM usage always goes up if there is an increase in, Image Size or CFG Scale, and SDXL models always take longer than SD models.*   
 *'Time per iter' comes from the 'diffusers' progress bar.*  
-*'Total time' comes from LCM-LoRA Studio. Starts when inference begins, Stops once the image is saved.*  
+*'Total time' comes from LCM-LoRA Studio. Starts when inference begins, Stops once the image is saved. So that includes 'decoding' the image.*  
 
-On MY Windows 10/11 systems I run a 'Pure Portable Python/AI System' off of an External USB 3.0 SSD, that I created which never touches the Windows Hard Drive. :) Everything, Python, Git, FFMPEG, mingw64 and more..., Models, Huggingface Cache, Gradio Cache, TEMP folders, PIP and it's Cache, Source, Docs... Everything.  
-So it has to load Python, the libraries/imports, models ALL through the USB bottleneck. :(  
-I'll probably release details on that in a seperate repo or something at a later date once I'm done with this project, with it all packaged up and doc'd.  
-
-So, with...  
-1. Python actually installed on your system.  
-2. And, with the No USB bottleneck I get because of my particular setup.  
-  
-It should perform faster on your system than my system (with same CPU/Speed/RAM etc..), mainly in the 'loading', 'saving' models area and other storage intensive tasks.  
 
 <br>
 
@@ -238,10 +222,11 @@ To install, ensure you are connected to the internet for installation of Python 
 Then later of course to download models, after that, it can work 100% Offline.  
 
 * Good Internet Connection
-* Windows 10 or higher, Raspberry Pi 5 OS (Linux)
+* Windows 10 or higher, Raspberry Pi 5 OS (Linux) Tested on Bookworm 2024-11-19 thru Trixie 2026-04-21 (MUST USE the 'lite' version for 8GB PI5)
 * Minimum Python version 3.10.8 (NOTE: Installer does not check version, only if Python exists)
-* CPU system with at least 8 GB RAM for SD models ONLY -OR- at least 16GB to do BOTH SD and SDXL Models.
+* CPU system with at least 16GB of RAM -or- Raspberry Pi 5 with 8GB or 16GB RAM.
 * Modern web browser for the user interface.
+* LOTS of free storage space, mainly for models and images.
 
 
 <br>
@@ -254,7 +239,7 @@ Then later of course to download models, after that, it can work 100% Offline.
 <a id="installation"></a>
 ## Installation
 
-* Download LCM-LoRA-Studio from GitHub, and unzip to a folder where you want it installed.
+* Download LCM-LoRA-Studio from GitHub, and unzip to a folder where you want it installed. NOTE: The install WILL create a python virtual enviroment to install all of the packages, so it doesn't trash your system.
 
 <br>
 
@@ -271,13 +256,67 @@ install.bat
 
 #### Raspberry Pi 5 Install
 
-Open a terminal and navigate to the directory you unzipped 'LCM-LoRA Studio' to.  
+Use the Raspberry Pi Imager tool to make an image onto an SD Card of Trixie-Lite Release 4-21-2026.
+
+We use Trixie-Lite Release 4-21-2026, because it uses least amount of RAM.
+
+Set up as you normally would, but we are going to be setting it up for 'headless' operation. So make sure to Enable SSH.
+
+When done. Put SD Card in Pi5. Boot the Pi5.
+
+Open a terminal (SSH/Putty) and Login.
+
+The 'lite' version of Raspberry Pi OS needs the transitional dummy package: 'libgl1-mesa-dev' used by Python-OpenCV2, since you will be using the Pi 'headless'.
+
+
 In the terminal type the following 2 command lines:
+
+```shell
+sudo apt-get update
+sudo apt-get install libgl1-mesa-dev
+```
+
+Now, you will need to finish configuring your Raspberry Pi 5 via 'raspi-config'.
+
+Use 'sudo raspi-config' to configure your Pi5 to, go to the console on boot, and then, to NOT auto login.
+
+Then, Turn OFF the Administrator password needed for 'sudo'.
+
+Exit raspi-config. 
+
+Reboot.
+
+Open a terminal (SSH/Putty) and Log back in.
+
+Now that we have installed the all of the requirements needed, we can install LCM-LoRA Studio.
+
+If you prefer using 'git', you'll have to install it. It does not come with Trixie Lite, but we do not need it, so let's continue.</p>
+
+In the terminal type the following commands:
+
+```shell
+cd
+wget -O lcm-lora-studio.zip https://github.com/rock-stevens/lcm-lora-studio/archive/refs/heads/main.zip
+unzip lcm-lora-studio.zip
+mv lcm-lora-studio-main lcm-lora-studio
+```
+
+
+Navigate to the directory you unzipped 'LCM-LoRA Studio' to.  
+
+```shell
+cd lcm-lora-studio
+```
+
+
+In the terminal type the following commands to start installing LCM-LoRA Studio:
 
 ```shell
 chmod +x *.sh
 ./install.sh
 ```
+
+
 
 <br>
 
@@ -317,16 +356,6 @@ To Run LCM-LoRA Studio, In the terminal type the following command line:
 
 <br>
 
-
-On 'first-run', the app will go to Huggingface and download the 'Image Classifier' model used in LCM-LoRA Studio. 
-(unless already in your Huggingface Hub Cache). This is done to ensure the location, ie... path exists before LCM-LoRA Studio gets going, because they need to exist. 
-(I've had some instances that the enviroment variable for the Hub Cache folder 'HF_HOME' nor the 'HF_HUB_CACHE' existed until there is something downloaded.) 
-And, LCM-Lora Studio needs it, so we can later load a model from the cache via a simple dropdown inside the app.
-The Image Classifier model, seeds the Hub Cache folder and the Image Classifier can be turned off later in the settings.  
-On some OSes, you may actually have to go into the settings and manually tell LCM-LoRA Studio the location of the Hub Cache folder.  
-
-<br>
-
 [Back to Top](#top) | [Quick Index](#qindex)
 
 
@@ -357,7 +386,7 @@ In the terminal type the following command line:
   
 About the Run LOOP method of starting LCM-LoRA Studio.  
 You can:  
-* Restart Python from the UI. Great for a remote Pi5.
+* Exit or Restart Python from the UI (Windows and Pi5). Reboot or Shutdown(Pi5 Only). Great for a remote Pi5.
 * Turn ON/OFF Huggingface Hub, for 100% offline.
 * You can also modify the 'restart.sh' or 'restart.bat' files to force a particular default state on startup.  
    
@@ -381,7 +410,6 @@ Note: With or without running LCM-LoRA Studio, via 'run' or 'restart' there is a
 * Compel - A text prompt weighting and blending library for transformers-type text embedding systems : https://github.com/damian0815/compel 
 
 **Models used**:  
-* Falconsai/nsfw_image_detection -  Fine-Tuned Vision Transformer (ViT) for NSFW Image Classification: https://huggingface.co/Falconsai/nsfw_image_detection  
 * stabilityai/sd-x2-latent-upscaler - Stable Diffusion x2 latent upscaler : https://huggingface.co/stabilityai/sd-x2-latent-upscaler  
 
   
@@ -448,8 +476,4 @@ Copyright (C) 2025-present [Rock Stevens](https://rockstevens.com)
 <br>
 
 [Back to Top](#top) | [Quick Index](#qindex)
-
-
-
-
 
