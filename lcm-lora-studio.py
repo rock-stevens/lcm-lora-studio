@@ -110,7 +110,8 @@ from diffusers import StableDiffusionLatentUpscalePipeline
 # ---------------------------------
 # load separate text encoder
 import transformers
-from transformers import CLIPTextModel
+# orig from transformers import CLIPTextModel
+from transformers import CLIPTextModel, CLIPTokenizer
 
 # ----------------------------------------
 # mainly for date/time in image filename
@@ -5454,7 +5455,7 @@ def load_hug_model(model_name, model_class_name, fp16_check):
 
 
 # ------------------------------------------------------------
-def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlora):
+def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlora, use_diff_text_enc, lcm_enc_model_name, lcm_fp16e):
     global pipeline             
     
     SDPIPELINE['pipeline_source'] = "Safetensors"
@@ -5490,7 +5491,32 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
  
     if STUDIO["low_memory"]["value"]: 
         pipeline_args["low_cpu_mem_usage"] = True
-    
+
+    if use_diff_text_enc:
+        text_enc_pipeline_args = {}
+        
+        if lcm_fp16e:
+            # add the parameter for the precision variant we want to load, MUST exist !!
+            # we can add a checkbox later fp16/fp32
+            text_enc_pipeline_args["variant"] = "fp16"
+        
+        # Conditionally add the 'text_encoder' argument
+        text_enc_pipeline_args["subfolder"] = "text_encoder"
+        # do we use a different 'text_encoder' instead of loaded model text_encoder?
+        if use_diff_text_enc:
+            if lcm_enc_model_name:
+                # Load the CLIP text encoder from a different model
+                # and NOT specify the number of layers to use.
+                # that can be done AFTER you make your LCM-LoRA model from this one,
+                # usong the LCM-LoRA model when you load it then.
+                try:
+                    text_encoder = transformers.CLIPTextModel.from_pretrained(get_lcm_model_path_file(lcm_enc_model_name), **text_enc_pipeline_args)
+                    pipeline_args["text_encoder"] = text_encoder
+                except Exception as e:
+                    tempout = "<h3>Error Loading Separate Text Encoder: " + lcm_enc_model_name + f"<br>{e}" + "</h3>"
+                    yield gr.update(value=tempout)
+                    return tempout
+
     # use 'original_config_file' when loading the safetensors model
     if STUDIO["safe_use_original_config_file"]["value"]:
         if SDPIPELINE['pipeline_class'] == "StableDiffusionPipeline":
@@ -5607,7 +5633,19 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
     pend = time.time()
     pelapsed = pend - pstart
 
-    tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Loaded Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " - " + loraout_text + "</h3>"
+    if use_diff_text_enc:
+        if SDPIPELINE['pipeline_model_type'] == "SD15":
+            if lcm_enc_model_name:
+                # we do this AFTER everything is completely done, with no errors
+                SDPIPELINE['pipeline_text_encoder'] = 1
+                SDPIPELINE['pipeline_text_encoder_name'] = lcm_enc_model_name
+                if add_lcmlora:
+                    tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " Text Encoder from : " + lcm_enc_model_name + " - " + loraout_text + "</h3>"
+                else:
+                    tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Loaded Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " - " + loraout_text + "</h3>"
+    else:
+        tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Loaded Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " - " + loraout_text + "</h3>"
+
     yield gr.update(value=tempout)
     gr.Info(SDPIPELINE['pipeline_model_type'] + " Safetensors Model loaded for " + SDPIPELINE['pipeline_gen_mode'] + ":</br>" + SDPIPELINE['pipeline_model_name'] + " - with LCM LoRA</br>" + format_seconds_strftime(pelapsed), duration=5.0, title="Safetensors Model")
    
@@ -7327,6 +7365,13 @@ def update_safe_model_list_dropdown():
     return gr.Dropdown(choices=LLSTUDIO["safe_model_list"], interactive=True)
    
 
+#rk99
+# ------------------------------------------------------
+def update_safeload_lmc_text_enc_dropdown():
+    read_lcm_sdonly_model_dir()
+    return gr.Dropdown(choices=LLSTUDIO["lcm_sdonly_model_list"], interactive=True)
+   
+
 
 # ------------------------------------------------------
 def update_safe_convert_model_list_dropdown():
@@ -8958,6 +9003,16 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                         with gr.Column(scale=1, min_width=100):
                             safeload_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA")
                     with gr.Row(equal_height=True):
+                        with gr.Row(equal_height=True):
+                            with gr.Column(scale=2, min_width=100):
+                                safeload_use_text_enc = gr.Checkbox(label="Use Separate Text Encoder (Use for Safetensors Models that do not have one)")
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            safeload_lmc_text_enc_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_sdonly_model_list"], label="Availiable LCM-LoRA Models to load Separate Text Encoder (SD Only)", value=LLSTUDIO["lcm_sdonly_model_list"][0])
+                        with gr.Column(scale=0, min_width=100):
+                            safeload_lmc_text_enc_refresh = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+                            safeload_use_text_fp16 = gr.Checkbox(label="variant fp16")
+                    with gr.Row(equal_height=True):
                         safeload_model_lora = gr.Slider(label="LCM-LoRA Scale", value=1.0, minimum=0.1, maximum=10, step=0.1)
      
                 
@@ -9630,8 +9685,8 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
     # SAFETENSORS Model section
     safeload_model_reload_button.click(update_safe_convert_model_list_dropdown, None, safeload_model_dropdown) 
-    safeload_model_load_button.click(load_safetensors_model, inputs=[safeload_model_dropdown,safeload_pipeline_classes, safeload_model_lora,safeload_model_add_lcmlora], outputs=[safeload_model_list_html]).then(display_pipeline_info, inputs=[safeload_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
-
+    safeload_model_load_button.click(load_safetensors_model, inputs=[safeload_model_dropdown, safeload_pipeline_classes, safeload_model_lora, safeload_model_add_lcmlora, safeload_use_text_enc, safeload_lmc_text_enc_dropdown, safeload_use_text_fp16], outputs=[safeload_model_list_html]).then(display_pipeline_info, inputs=[safeload_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
+    safeload_lmc_text_enc_refresh.click(update_safeload_lmc_text_enc_dropdown, None, safeload_lmc_text_enc_dropdown) 
 
 
 # ------------------------------------------------------------------------------------------------------------------
