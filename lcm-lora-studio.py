@@ -110,8 +110,7 @@ from diffusers import StableDiffusionLatentUpscalePipeline
 # ---------------------------------
 # load separate text encoder
 import transformers
-# orig from transformers import CLIPTextModel
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import CLIPTextModel
 
 # ----------------------------------------
 # mainly for date/time in image filename
@@ -5506,9 +5505,7 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
         if use_diff_text_enc:
             if lcm_enc_model_name:
                 # Load the CLIP text encoder from a different model
-                # and NOT specify the number of layers to use.
-                # that can be done AFTER you make your LCM-LoRA model from this one,
-                # usong the LCM-LoRA model when you load it then.
+                # and specify the number of layers to use.
                 try:
                     text_encoder = transformers.CLIPTextModel.from_pretrained(get_lcm_model_path_file(lcm_enc_model_name), **text_enc_pipeline_args)
                     pipeline_args["text_encoder"] = text_encoder
