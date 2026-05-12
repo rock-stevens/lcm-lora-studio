@@ -5505,7 +5505,9 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
         if use_diff_text_enc:
             if lcm_enc_model_name:
                 # Load the CLIP text encoder from a different model
-                # and specify the number of layers to use.
+                # and NOT specify the number of layers to use.
+                # that can be done AFTER you make your LCM-LoRA model from this one,
+                # using the LCM-LoRA model when you load it then.
                 try:
                     text_encoder = transformers.CLIPTextModel.from_pretrained(get_lcm_model_path_file(lcm_enc_model_name), **text_enc_pipeline_args)
                     pipeline_args["text_encoder"] = text_encoder
@@ -9005,7 +9007,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                                 safeload_use_text_enc = gr.Checkbox(label="Use Separate Text Encoder (Use for Safetensors Models that do not have one)")
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=2, min_width=100):
-                            safeload_lmc_text_enc_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_sdonly_model_list"], label="Availiable LCM-LoRA Models to load Separate Text Encoder (SD Only)", value=LLSTUDIO["lcm_sdonly_model_list"][0])
+                            safeload_lmc_text_enc_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_sdonly_model_list"], label="Availiable LCM-LoRA Models to load Separate Text Encoder (SD Only)")
                         with gr.Column(scale=0, min_width=100):
                             safeload_lmc_text_enc_refresh = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
                             safeload_use_text_fp16 = gr.Checkbox(label="variant fp16")
