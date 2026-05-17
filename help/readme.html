@@ -45,7 +45,11 @@
 <p><img src="lcm-lora-studio-app-header.png" alt="LCM-LoRA Studio">  </p>
 <p><a id="introduction"></a></p>
 <h2 id="introduction">Introduction</h2>
-<p>UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)</p><p><em><strong>Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.</strong></em>  </p>
+
+<p>UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)</p>
+<p>UPDATE: 05-15-2026 Added: Save LCM-LoRA Models as Single File Safetensors Models (SD/SDXL), Load separate Text Encoder for Safetensors Models (SD Only)</p>
+
+<p><em><strong>Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.</strong></em>  </p>
 <p>At it&#39;s basic core it generates images using common 
 StableDiffusion techniques. However add an LCM-LoRA to the base model and this enables a 4 Step inference 
 to generate images. This shorter number of steps allows us to generate images faster than the nomal 20-50 
@@ -154,8 +158,10 @@ and Save that model as well.<br>See the block diagram below.</p>
 <li>Load SD and SDXL Huggingface Models (You can grab just the files needed, and it will load the model directly into the &#39;Pipeline&#39;, or the &#39;whole repository&#39;)</li>
 <li>Load SD and SDXL Safetensors Models - Single File Safetensors Models - From Huggingface, Civitai etc...</li>
 <li>Load SD and SDXL LoRA Models - Single File Safetensors Models - From Huggingface, Civitai etc...</li>
-<li>Load a seperate text encoder than the loaded model uses. (LCM-LoRA, SD)</li>
+<li>Load a seperate text encoder than the loaded model uses. (LCM-LoRA and Safetensors, SD Only)</li>
 <li>Use &#39;Reference&#39; Models and/or &#39;Original Config&#39; Files when Loading Safetensors Model files to guide loading. (See settings)</li>
+<li>Save LCM-LoRA Models to (Single File) Safetensors Models. (Compatible with A1111 if using an LCM Scheduler)</li>
+<li>Turn On/Off LCM Scheduler at key points.</li>
 </ul>
 <p><strong>LoRA</strong></p>
 <ul>
@@ -304,9 +310,19 @@ sudo apt-get install libgl1-mesa-dev
 
 <p>Now, you will need to finish configuring your Raspberry Pi 5 via &#39;raspi-config&#39;.</p>
 
-<p>Use &#39;sudo raspi-config&#39; to configure your Pi5 to, go to the console on boot, and then, to NOT auto login.</p>
+<p>In the terminal type the following:</p>
 
-<p>Then, Turn OFF the Administrator password needed for &#39;sudo&#39;.</p>
+<pre><code class="language-shell">sudo raspi-config
+</code></pre>
+<br>
+
+<p>Now configure your Pi5 to:</p>
+
+<ul>
+<li>Go to the console on boot</li>
+<li>NOT auto login.</li>
+<li>Turn OFF the Administrator password needed for &#39;sudo&#39;. (<i>We'll be able to remote boot and shutdown from the GUI</i>)</li>
+</ul>
 
 <p>Exit raspi-config.</p>
 
