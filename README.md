@@ -10,6 +10,8 @@
 
 UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)
 
+UPDATE: 05-15-2026 Added: Save LCM-LoRA Models as Single File Safetensors Models (SD/SDXL), Load separate Text Encoder for Safetensors Models (SD Only).
+
 
 ***Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.***  
   
@@ -145,8 +147,10 @@ See the block diagram below.
 * Load SD and SDXL Huggingface Models (You can grab just the files needed, and it will load the model directly into the 'Pipeline', or the 'whole repository')
 * Load SD and SDXL Safetensors Models - Single File Safetensors Models - From Huggingface, Civitai etc...
 * Load SD and SDXL LoRA Models - Single File Safetensors Models - From Huggingface, Civitai etc...
-* Load a seperate text encoder than the loaded model uses. (LCM-LoRA, SD)
+* Load a seperate text encoder than the loaded model uses. (LCM-LoRA and Safetensors, SD Only)</li>
 * Use 'Reference' Models and/or 'Original Config' Files when Loading Safetensors Model files to guide loading. (See settings)
+* Save LCM-LoRA Models to (Single File) Safetensors Models. (Compatible with A1111 if using an LCM Scheduler)
+* Turn On/Off LCM Scheduler at key points.
 
 **LoRA**
 * Load the LCM-LoRA Weights and then save the Pipeline as an LCM-LoRA Model for the faster '4 step inference'.
@@ -278,9 +282,19 @@ sudo apt-get install libgl1-mesa-dev
 
 Now, you will need to finish configuring your Raspberry Pi 5 via 'raspi-config'.
 
-Use 'sudo raspi-config' to configure your Pi5 to, go to the console on boot, and then, to NOT auto login.
+In the terminal type the following:
 
-Then, Turn OFF the Administrator password needed for 'sudo'.
+
+```shell
+sudo raspi-config
+```
+
+Now configure your Pi5 to:
+
+1. Go to the console on boot
+2. NOT auto login.
+3. Turn OFF the Administrator password needed for 'sudo (*We'll be able to remote boot and shutdown from the GUI*)
+
 
 Exit raspi-config. 
 

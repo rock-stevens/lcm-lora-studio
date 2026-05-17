@@ -1,6 +1,6 @@
 # ---------------------------------------------------
 # ---------------LCM-LoRA Studio---------------------
-# -----------------Version 1.5-----------------------
+# -----------------Version 1.5a----------------------
 # ---------------------------------------------------
 # main application
 # Filename: lcm-lora-studio.py
@@ -62,6 +62,12 @@ from diffusers import StableDiffusionInstructPix2PixPipeline, StableDiffusionXLI
 # -------------------------------------------------
 # GUI Image as an Input
 from diffusers.utils import load_image
+
+
+# -------------------------------------------------
+# Custom imports - LCM-LoRA Studio model conversion routines
+from utils.lcm_convert_diffusers_to_original_stable_diffusion import convert_sd_to_safetensors
+from utils.lcm_convert_diffusers_to_original_sdxl import convert_sdxl_to_safetensors
 
 # -------------------------------------------------
 # imports, settings, read model config settings, etc...
@@ -5003,13 +5009,13 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
     # and put it in the image gallery for this specific LCM-LoRA Model
     if not os.path.exists(model_image_path_file):
         os.makedirs(model_image_path_file)
-        file1 = open(os.path.join(model_image_path_file, new_lcm_model_filename) + ".md", 'w')
-        content = "## LCM-LoRA Model: " + new_lcm_model_filename + "\n\n\n"
-        content = content + "## Original Model: " + old_model_name + "\n\n\n"
-        content = content + "Loaded LoRAs: The 'LCM-LoRA', will not be shown if the model IS, an LCM-LoRA model. Because the LCM-LoRA has already been fused to the model, and given a prefixed model name to indicate model type\n\n\n"
-        content = content + loadedloras + "\n\n\n"
-        file1.write(content)
-        file1.close()    
+    file1 = open(os.path.join(model_image_path_file, new_lcm_model_filename) + ".md", 'w')
+    content = "## LCM-LoRA Model: " + new_lcm_model_filename + "\n\n\n"
+    content = content + "## Original Model: " + old_model_name + "\n\n\n"
+    content = content + "Loaded LoRAs: The 'LCM-LoRA', will not be shown if the model IS, an LCM-LoRA model. Because the LCM-LoRA has already been fused to the model, and given a prefixed model name to indicate model type\n\n\n"
+    content = content + loadedloras + "\n\n\n"
+    file1.write(content)
+    file1.close()    
 
     tempout = "<h3>" + "Finished Saving New Model: " + new_lcm_model_filename + "</h3><h3>Re-Initializing Pipeline for Model Loading...</h3>"
     yield gr.update(value=tempout)
@@ -5029,7 +5035,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
 
 
 # ---------------------------------------------------------------
-def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_clipskip, use_controlnet, controlnet_name, use_controlnet2, controlnet_name2, fp16, fp16e):
+def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_clipskip, use_controlnet, controlnet_name, use_controlnet2, controlnet_name2, fp16, fp16e, add_lora, lora_value, use_lcm):
     
     global pipeline             
     
@@ -5108,6 +5114,8 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
                 # Load the CLIP text encoder from a different model
                 # and specify the number of layers to use.
                 try:
+                    tempout = "<h3>Loading " + SDPIPELINE['pipeline_model_type'] + " Separate Text Encoder from " + text_enc_model_name + "</h3>"
+                    yield gr.update(value=tempout)
                     text_encoder = transformers.CLIPTextModel.from_pretrained(get_lcm_model_path_file(text_enc_model_name), **text_enc_pipeline_args)
                     pipeline_args["text_encoder"] = text_encoder
                 except Exception as e:
@@ -5125,6 +5133,8 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
             controlnet = []
             if use_controlnet:
                 try:
+                    tempout = "<h3>Loading " + SDPIPELINE['pipeline_model_type'] + " ControlNet Model: " + controlnet_name + "</h3>"
+                    yield gr.update(value=tempout)
                     controlnet.append(ControlNetModel.from_pretrained(CNETMODELS[controlnet_name]))
                 except Exception as e: 
                     tempout = "<h3>Error Loading ControlNet Model: " + CNETMODELS[controlnet_name] + "<br>For ControlNet Named: " + controlnet_name + f"<br>{e}" + "</h3>"
@@ -5132,6 +5142,8 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
                     return tempout
             if use_controlnet2:
                 try:
+                    tempout = "<h3>Loading " + SDPIPELINE['pipeline_model_type'] + " ControlNet Model: " + controlnet_name2 + "</h3>"
+                    yield gr.update(value=tempout)
                     controlnet.append(ControlNetModel.from_pretrained(CNETMODELS[controlnet_name2]))
                 except Exception as e: 
                     tempout = "<h3>Error Loading ControlNet Model: " + CNETMODELS[controlnet_name2] + "<br>For ControlNet Named: " + controlnet_name2 + f"<br>{e}" + "</h3>"
@@ -5186,36 +5198,75 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
         yield gr.update(value=tempout)
         return tempout
 
+    
+    if add_lora:
+        tempout = "<h3>Loading " + SDPIPELINE['pipeline_model_type'] + " LCM-LoRA weights for " + model_name + "</h3>"
+        yield gr.update(value=tempout)
+        pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+        if SDPIPELINE['pipeline_model_type'] == "SDXL":
+            pipeline.load_lora_weights("latent-consistency/lcm-lora-sdxl", weight_name="pytorch_lora_weights.safetensors")
+        else:
+            pipeline.load_lora_weights("latent-consistency/lcm-lora-sdv1-5", weight_name="pytorch_lora_weights.safetensors")
+        tempout = "<h3>Fusing " + SDPIPELINE['pipeline_model_type'] + " LCM-LoRA weights to " + model_name + "</h3>"
+        yield gr.update(value=tempout)
+        pipeline.fuse_lora(lora_scale=lora_value)
+        tempout = "<h3>Unloading LoRAs Adapters since they are now 'fused' to the Model...</h3>"
+        yield gr.update(value=tempout)
+        pipeline.unload_lora_weights()
+        adapter_names = pipeline.get_active_adapters()
+        pipeline.delete_adapters(adapter_names)
+        tempout = "<h3>Finished Deleting LoRA Adapters.</h3>"
+        yield gr.update(value=tempout)
+        loraout_text = " - with LCM-LoRA weights"
+    else:
+        if use_lcm:
+            pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+            loraout_text = " - using LCM Scheduler"
+        else:
+            loraout_text = ""
+
+    
     if STUDIO["low_memory_inf"]["value"]: 
-        
         pipeline.vae.enable_slicing()
         pipeline.enable_attention_slicing("max")
 
-    tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + "</h3>"
-    if use_diff_text_enc:
-        if SDPIPELINE['pipeline_model_type'] == "SD15":
-            if text_enc_model_name:
-                # we do this AFTER everything is completely done, with no errors
-                SDPIPELINE['pipeline_text_encoder'] = 1
-                SDPIPELINE['pipeline_text_encoder_name'] = text_enc_model_name
-                tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " Text Encoder from : " + text_enc_model_name + "</h3>"
-    if (use_controlnet or use_controlnet2):
-        if SDPIPELINE['pipeline_model_type'] == "SD15":
+    textencoder_txtout = ""
+    controlnet_txtout = ""
+    extra_txtout = ""
+    
+    if SDPIPELINE['pipeline_model_type'] == "SD15": 
+        if use_diff_text_enc and text_enc_model_name:
+            # we do this AFTER everything is completely done, with no errors
+            SDPIPELINE['pipeline_text_encoder'] = 1
+            SDPIPELINE['pipeline_text_encoder_name'] = text_enc_model_name
+            textencoder_txtout = "TextEncoder: " + text_enc_model_name
+        if (use_controlnet or use_controlnet2):
             # we do this AFTER everything is completely done, with no errors
             SDPIPELINE['pipeline_controlnet_loaded'] = int(len(controlnet))
             if use_controlnet:
                 SDPIPELINE['pipeline_controlnet_name'] = controlnet_name
-                tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " ControlNet : " + controlnet_name + "</h3>"
+                controlnet_txtout = "ControlNet: " + controlnet_name
             if use_controlnet2:
                 SDPIPELINE['pipeline_controlnet_name2'] = controlnet_name2
-                tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " ControlNet : " + controlnet_name2 + "</h3>"
+                controlnet_txtout = "ControlNet: " + controlnet_name2
             if (use_controlnet and use_controlnet2):
-                tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + " ControlNets : " + controlnet_name + " / " + controlnet_name2 + "</h3>"
-            
-    yield gr.update(value=tempout)
+                controlnet_txtout = "ControlNets: " + controlnet_name + "/" + controlnet_name2
+ 
     pend = time.time()
     pelapsed = pend - pstart
-    gr.Info(SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model" + SDPIPELINE['pipeline_model_name'] + "loaded for " + SDPIPELINE['pipeline_gen_mode'] + " " + format_seconds_strftime(pelapsed), duration=5.0, title="LCM-LoRA Model")
+
+    if int(len(textencoder_txtout)) > 0:
+        extra_txtout = extra_txtout + textencoder_txtout + "<br>"
+    if int(len(controlnet_txtout)) > 0:
+        extra_txtout = extra_txtout + controlnet_txtout   
+
+    # line break
+    tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode']  + loraout_text + "<br>" + extra_txtout + "</h3>"
+    # # no break
+    # tempout = "<h3>" + SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Loaded Model " + SDPIPELINE['pipeline_model_name'] + " for " + SDPIPELINE['pipeline_gen_mode'] + loraout_text + extra_txtout + "</h3>"
+    yield gr.update(value=tempout)
+    gr.Info(SDPIPELINE['pipeline_model_type'] + " " + SDPIPELINE['pipeline_source'] + " Model loaded:</br>" + SDPIPELINE['pipeline_model_name'] + "</br>" + format_seconds_strftime(pelapsed), duration=5.0, title=SDPIPELINE['pipeline_source'] + " Model")
+
     # we do this AFTER everything is completely done, with no errors
     SDPIPELINE['pipeline_loaded'] = 1
     return tempout
@@ -5225,7 +5276,7 @@ def load_lcm_model(model_name, use_diff_text_enc, text_enc_model_name, text_enc_
 
 
 # ------------------------------------------------------------------
-def load_hub_model(model_name, fp16_check, lora_value, add_lcmlora):
+def load_hub_model(model_name, fp16_check, use_lcmscheduler, lora_value, add_lcmlora):
     global pipeline             
 
     SDPIPELINE['pipeline_source'] = "HUB Cached"
@@ -5320,6 +5371,8 @@ def load_hub_model(model_name, fp16_check, lora_value, add_lcmlora):
         yield gr.update(value=tempout)
         return tempout
 
+
+
     if add_lcmlora:
         tempout = "<h3>Loading " + SDPIPELINE['pipeline_model_type'] + " LCM-LoRA weights for " + model_name + "</h3>"
         yield gr.update(value=tempout)
@@ -5338,9 +5391,13 @@ def load_hub_model(model_name, fp16_check, lora_value, add_lcmlora):
         pipeline.delete_adapters(adapter_names)
         tempout = "<h3>Finished Deleting LoRA Adapters.</h3>"
         yield gr.update(value=tempout)
-        loraout_text = " - with LCM LoRA"
+        loraout_text = " - with LCM-LoRA weights"
     else:
-        loraout_text = " - without LCM LoRA"
+        if add_lcm_scheduler:
+            pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+            loraout_text = " - using LCM Scheduler"
+        else:
+            loraout_text = ""
     
 
     pend = time.time()
@@ -5454,7 +5511,7 @@ def load_hug_model(model_name, model_class_name, fp16_check):
 
 
 # ------------------------------------------------------------
-def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlora, use_diff_text_enc, lcm_enc_model_name, lcm_fp16e):
+def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlora, use_diff_text_enc, lcm_enc_model_name, lcm_fp16e, add_lcm_scheduler):
     global pipeline             
     
     SDPIPELINE['pipeline_source'] = "Safetensors"
@@ -5624,10 +5681,13 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
         pipeline.delete_adapters(adapter_names)
         tempout = "<h3>Finished Deleting LoRA Adapters.</h3>"
         yield gr.update(value=tempout)
-        loraout_text = " - with LCM LoRA"
+        loraout_text = " - with LCM-LoRA Weights"
     else:
-        loraout_text = " - without LCM LoRA"
-    
+        if add_lcm_scheduler:
+            pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+            loraout_text = " - using LCM Scheduler"
+        else:
+            loraout_text = ""
 
     pend = time.time()
     pelapsed = pend - pstart
@@ -5652,6 +5712,106 @@ def load_safetensors_model(safetensors_model, pipe_class, lora_value, add_lcmlor
     SDPIPELINE['pipeline_loaded'] = 1
     return tempout
     
+
+
+
+
+# --------------------------------------------------------------
+def convert_to_safetensors_model(lcm_model_name, use_fp16, safe_model_name, use_half, use_safe, use_all_safe, model_card_info):
+    
+    if not lcm_model_name:
+        tempout = "<h3>No LCM-LoRA Model Name selected.<br>Please select a model from the dropdown box.<br>Refresh the dropdown box if needed.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    if not safe_model_name:
+        tempout = "<h3>No Safetensors Model Name entered.<br>Please enter a valid model name. No extension.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    binfile_found = ""
+    binfile_found_card = ""
+
+    tempout = "<h3>Starting Model Conversion<br>Converting Model: " + lcm_model_name + "</h3>"
+    yield gr.update(value=tempout)
+
+    model_path_file = get_lcm_model_path_file(lcm_model_name)
+    model_config_filename = os.path.join(model_path_file, "model_index.json")
+
+    try:
+        with open(model_config_filename, "r") as f:
+            model_config_data = json.load(f)
+    except Exception as e:
+        tempout = f"<h3>Error: 'model_index.json' found in model folder. {str(e)}</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    if not model_config_data:
+        tempout = f"<h3>Error: No data parsed from 'model_index.json' found in model folder.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    pipe_class = model_config_data["_class_name"]
+    pipe_type = PIPECLASSES[pipe_class]['pipeline_model_type']
+
+    safe_model_path_file = get_safe_model_path_file(safe_model_name + ".safetensors")
+    safe_model_image_path = get_safe_model_image_path_file(safe_model_name)
+    
+    try:
+        if pipe_type == "SDXL":
+            result = convert_sdxl_to_safetensors(model_path_file, use_fp16, safe_model_path_file, use_half, use_safe, use_all_safe)
+        else:
+            result = convert_sd_to_safetensors(model_path_file, use_fp16, safe_model_path_file, use_half, use_safe, use_all_safe)
+    except Exception as e:
+        tempout = f"<h3>Error: {str(e)}</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+     
+    if result != "OK" and result != "OKB":
+        tempout = f"<h3>Conversion Routine Error: {result}</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    
+    # fix up some text for model card, for each model, lcm-lora and safetensors
+    if use_half:
+        safe_precision = "fp16"
+    else:
+        safe_precision = "fp32"
+    
+    if use_fp16:
+        mod_precision = "fp16"
+    else:
+        mod_precision = "fp32"
+
+    if result == "OKB":
+        binfile_found = "<br>NOTE: At least one component used a *.BIN file as the model for that component.<br>Check BOTH 'Use Safetensors' and 'Use ALL Safetensors ONLY' to use <u>ONLY Safetensors model components</u>"
+        binfile_found_card = "## WARNING: At least one component used a *.BIN file as the model for that component."
+    
+    # create a model card (*.md) for this model 
+    # and put it in the image gallery for this specific Model
+    if not os.path.exists(safe_model_image_path):
+        os.makedirs(safe_model_image_path)
+    file1 = open(os.path.join(safe_model_image_path, safe_model_name) + ".md", 'w')
+    content = "## Safetensors Model: " + safe_model_name + ".safetensors\n"
+    content = content + "### Model Type: " + pipe_type + "\n\n\n"
+    content = content + "### Model Precision: " + safe_precision + "\n\n\n"
+    content = content + "## Original Model: " + lcm_model_name + "\n"
+    content = content + "### Original Model Precision: " + mod_precision + "\n\n\n"
+    content = content + "*Converted using LCM-LoRA Studio v1.5a*\n\n\n"
+    content = content + binfile_found_card + "\n\n\n"
+    content = content + model_card_info + "\n\n\n"
+    file1.write(content)
+    file1.close()    
+
+    tempout = f"<h3>Successfully converted: '{lcm_model_name}'<br>to: '{safe_model_name}.safetensors'.</h3><br>Also created model card: '{safe_model_name}.md'{binfile_found}"
+    yield gr.update(value=tempout)
+    return tempout
+
+
+
+
+
 
 # --------------------------------------------------------------
 def download_huggingface_model(model_name):
@@ -6596,7 +6756,7 @@ def delete_hub_model(model_name, del_model):
 
 
 # ----------------------------------------------------------------------------------------------
-def add_lora_model(model_name, loravalue):
+def add_lora_model(model_name, loravalue, use_lcm):
     global pipeline             
     
     if not model_name:
@@ -6609,6 +6769,7 @@ def add_lora_model(model_name, loravalue):
         yield gr.update(value=tempout)
         grinfo_no_model_loaded()
         return tempout
+        
     pstart = time.time()
     tempout = "<h3>Loading Lora...&nbsp;&nbsp;&nbsp;" + model_name + "</h3>"
     yield gr.update(value=tempout)
@@ -6616,7 +6777,9 @@ def add_lora_model(model_name, loravalue):
     LLSTUDIO["lora_adapter_numb"] = LLSTUDIO["lora_adapter_numb"] + 1
     lora_adapter_name = "lora" + str(LLSTUDIO["lora_adapter_numb"])
 
-    pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+    if use_lcm:
+        pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
+
     pipeline.load_lora_weights(LLSTUDIO["lora_model_dir"], weight_name=lora_model_full_name, adapter_name=lora_adapter_name)
     pipeline.set_adapters([lora_adapter_name], adapter_weights=[loravalue])
     
@@ -6647,12 +6810,15 @@ def change_lora_model(model_name, loravalue):
         yield gr.update(value=tempout)
         grinfo_no_model_loaded()
         return tempout
+    
     if len(LLSTUDIO["loaded_lora_model_adapter"]) < 1:
         tempout = "<h3>No LoRA Model Loaded !!</br>Can not change LoRA Weight !</h3>"
         yield gr.update(value=tempout)
         gr.Info("No LoRA Model Loaded !!</br>Can not change LoRA Weight !", duration=3.0, title="LoRA Change Weight")
         return tempout
+    
     pstart = time.time()
+    
     if len(LLSTUDIO["loaded_lora_model_adapter"]) > 0:
         for i in range(len(LLSTUDIO["loaded_lora_model_adapter"])):
             if model_name == LLSTUDIO["loaded_lora_model_name"][i]:
@@ -6663,8 +6829,10 @@ def change_lora_model(model_name, loravalue):
                 LLSTUDIO["loaded_lora_model_value"][i] = loravalue
                 tempout = "<h3>Changed Lora Weights on model: " + model_name + "</h3>"
                 yield gr.update(value=tempout)
+    
     pend = time.time()
     pelapsed = pend - pstart
+    
     tempout = "<h3>Loaded Lora: " + model_name + "</br>Lora Adapter: " + loaded_lora_adapter + "</br>Lora Value: " + str(loravalue) + "</h3>"
     yield gr.update(value=tempout)
     gr.Info("Lora Weights Changed on model: " + model_name + "</br>", title="Lora Model")
@@ -6681,6 +6849,7 @@ def list_lora_model():
         yield gr.update(value=tempout)
         grinfo_no_model_loaded()
         return tempout
+    
     tempout = "<h3>Loaded LoRA Adapters: " + str(len(LLSTUDIO["loaded_lora_model_adapter"])) + "</h3></br>"
 
     if len(LLSTUDIO["loaded_lora_model_adapter"]) > 0:
@@ -6691,7 +6860,9 @@ def list_lora_model():
             tempout = tempout + "LoRA Model Value: " + str(LLSTUDIO["loaded_lora_model_value"][i]) + "</br>"
             tempout = tempout + "----------------------------------</br>"
         tempout = tempout + "</pre>"
+    
     read_loaded_lora_models()    
+    
     yield gr.update(value=tempout)
     return tempout
 
@@ -7835,13 +8006,13 @@ def clear_generation_status_and_images():
 
 # ----------------------------------------
 def grinfo_no_model_loaded():
-    gr.Info("<h4>No Model Loaded. Please Load a Model First.</h4><h4>Select the tab 'Pipeline - Models' to load a model into the pipeline.</h4>", duration=1.0, title="Load Model")  
+    gr.Info("<h4>No Model Loaded.<br>Please Load a Model First.</h4>", duration=1.0, title="Load Model")  
 
 
 
 # ----------------------------------------
 def str_no_model_loaded():
-    return "<h4>No Model Loaded. Please Load a Model First. - Select the tab 'Pipeline - Models' to load a model into the pipeline.</h4>"
+    return "<h4>No Model Loaded. Please Load a Model First. - Select the tab 'Pipeline - Models' to load a model into the pipeline.<br>Then select from where to load your model and pipeline features.</h4>"
 
 
 
@@ -8481,7 +8652,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
             update_cpumemswap_mem = gr.Button("", icon="./icons/view64.png", elem_id="deletemodel_button")    
     with gr.Row(equal_height=False):
         with gr.Column(scale=2, min_width=100): 
-            model_list_html = gr.HTML("<h4>No Model Loaded. Please Load a Model First. - Select the tab 'Pipeline - Models' to load a model into the pipeline.</h4>")
+            model_list_html = gr.HTML("<h4>No Model Loaded. Please Load a Model First. - Select the tab 'Pipeline - Models' to load a model into the pipeline.<br>Then select from where to load your model and pipeline features.</h4>")
         with gr.Column(scale=0, min_width=100):
             pipeline_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")    
 
@@ -8914,12 +9085,19 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                         with gr.Column(scale=2, min_width=100):
                             lcm_model_list_html = gr.HTML("Load saved LCM-LoRA type models here. Auto loads correct pipeline based on model config file. Can select a different Text Encoder from another LCM-LoRA model (SD Only). (NOTE: LCM-LoRA Models that show up in the dropdown have been saved with the 'Save Model' operation, and 'normally with' the LCM-LoRA weights fused.)")
                             gr.Markdown("<br>")
-                            lcm_model_list_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Availiable LCM-LoRA Models (Local Saved LCM-LoRA Models)")
-                            load_lcm_model_fp16_check = gr.Checkbox(value=1,label="variant fp16")
+                            lcm_model_list_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Availiable LCM-LoRA Models (Local Saved LCM-LoRA Models - 'Diffusers' Directory Format)")
+                            with gr.Row(equal_height=True):
+                                load_lcm_model_fp16_check = gr.Checkbox(value=1, label="variant fp16")
                         with gr.Column(scale=0, min_width=100):
                             lcm_model_reload_list_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
                             lcm_model_info_button = gr.Button("", icon="./icons/about64.png", elem_id="reloadmodellist_button")
                             lcm_model_load_model_button = gr.Button("", icon="./icons/load64.png", elem_id="loadmodel_button")
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=1, min_width=100):
+                            load_lcm_model_lora_value = gr.Slider(label="LCM-LoRA Scale", value=1.0, minimum=0.1, maximum=10, step=0.1)
+                        with gr.Column(scale=1, min_width=100):
+                            load_lcm_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA Weights")
+                            load_lcm_model_use_lcmscheduler = gr.Checkbox(value=0, label="Use LCMScheduler Only - No Weights (For LCM-LoRA 'baked-in' Models. Very Rare Usage Cases.)")
                     with gr.Row(equal_height=True):
                         gr.Markdown("Use a separate text encoder for image variations from same model (SD Only)")
                     with gr.Row(equal_height=True):
@@ -8959,8 +9137,8 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                         with gr.Column(scale=2, min_width=100):
                             hub_model_lora = gr.Slider(label="LCM-LoRA Lora Scale", value=1.0, minimum=0.1, maximum=10, step=0.1)
                         with gr.Column(scale=1, min_width=100):
-                            hub_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA")
-
+                            hub_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA Weights")
+                            hub_model_model_use_lcmscheduler = gr.Checkbox(value=0, label="Use LCMScheduler Only - No Weights")
 
                 with gr.Tab("Huggingface Model", id="tab_hm"):
                     with gr.Row(equal_height=True):
@@ -8973,7 +9151,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                         with gr.Column(scale=0, min_width=100):
                             hug_model_download_model_button = gr.Button("", icon="./icons/load64.png", elem_id="loadmodel_button")
                     with gr.Row(equal_height=True):
-                        hug_pipeline_classes = gr.Dropdown(choices=PIPELINE_CLASSES, label="Select a Pipeline Class to load model", value=PIPELINE_CLASSES[0])
+                        hug_pipeline_classes = gr.Dropdown(choices=PIPELINE_CLASSES, label="You MUST select the correct Pipeline Class to load model", value=PIPELINE_CLASSES[0])
                     with gr.Row(equal_height=True):
                         hub_mark2 = gr.Markdown("### Download Model to Huggingface Models Cache")
                     with gr.Row(equal_height=True):
@@ -8997,30 +9175,61 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                             safeload_model_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
                             safeload_model_load_button = gr.Button("", icon="./icons/load64.png", elem_id="converttolcmmodel_button")
                     with gr.Row(equal_height=True):
-                        with gr.Column(scale=2, min_width=100):
-                            safeload_pipeline_classes = gr.Dropdown(choices=PIPELINE_CLASSES, label="Select a Pipeline Class to load model", value=PIPELINE_CLASSES[0])
                         with gr.Column(scale=1, min_width=100):
-                            safeload_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA")
+                            safeload_pipeline_classes = gr.Dropdown(choices=PIPELINE_CLASSES, label="You MUST select the correct Pipeline Class to load model", value=PIPELINE_CLASSES[0])
+                        with gr.Column(scale=1, min_width=100):
+                            safeload_model_add_lcmlora = gr.Checkbox(label="Auto Add LCM-LoRA Weights")
+                            safeload_model_use_lcmscheduler = gr.Checkbox(label="Use LCMScheduler Only - No Weights (For LCM-LoRA 'baked-in' Models)")
+                    with gr.Row(equal_height=True):
+                        safeload_model_lora = gr.Slider(label="LCM-LoRA Scale", value=1.0, minimum=0.1, maximum=10, step=0.1)
                     with gr.Row(equal_height=True):
                         with gr.Row(equal_height=True):
                             with gr.Column(scale=2, min_width=100):
-                                safeload_use_text_enc = gr.Checkbox(label="Use Separate Text Encoder (Use for Safetensors Models that do not have one)")
+                                safeload_use_text_enc = gr.Checkbox(label="Use Separate Text Encoder (Use for Safetensors Models that do not have one, SD Only)")
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=2, min_width=100):
                             safeload_lmc_text_enc_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_sdonly_model_list"], label="Availiable LCM-LoRA Models to load Separate Text Encoder (SD Only)")
-                        with gr.Column(scale=0, min_width=100):
+                        with gr.Column(scale=1, min_width=100):
                             safeload_lmc_text_enc_refresh = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
-                            safeload_use_text_fp16 = gr.Checkbox(label="variant fp16")
-                    with gr.Row(equal_height=True):
-                        safeload_model_lora = gr.Slider(label="LCM-LoRA Scale", value=1.0, minimum=0.1, maximum=10, step=0.1)
+                            safeload_use_text_fp16 = gr.Checkbox(value=1, label="variant fp16")
      
                 
+
+                with gr.Tab("Convert LCM-LoRA Model to Safetensors", id="tab_cml"):
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            convert_lcm_model_list_html = gr.HTML("Convert 'saved' LCM-LoRA type models to Safetensors (Single File) Models.<br>(<font size='-1'><i>NOTE:*Only* converts the UNet, VAE, and Text Encoder</i></font>.)")
+                            gr.Markdown("<br>")
+                            convert_lcm_model_list_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Availiable LCM-LoRA Models for Conversion. (Local Saved LCM-LoRA Models)")
+                            convert_load_lcm_model_fp16_check = gr.Checkbox(value=1,label="variant fp16")
+                        with gr.Column(scale=0, min_width=100):
+                            convert_lcm_model_reload_list_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+                            convert_lcm_model_info_button = gr.Button("", icon="./icons/about64.png", elem_id="reloadmodellist_button")
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            convert_safe_model_name = gr.Textbox(label="New Safetensors Base Model Name (No extension)", placeholder="MySafetensorsModelName")
+                            convert_lcm_model_load_model_button = gr.Button("Convert LCM-LoRA Model to Safetensors Model")
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            gr.Markdown("Safetensors Model Conversion Settings")
+                            convert_safe_model_half = gr.Checkbox(label="Use Half Precision (fp16)", value=True)
+                            convert_safe_model_use = gr.Checkbox(label="Use Safetensors (Fallback on *.BIN)", value=True)
+                            convert_safe_model_only = gr.Checkbox(label="Use ALL Safetensors ONLY (NEVER USE *.BIN, Use Safetensors must be checked.)", value=True)
+                            convert_safe_model_card_info = gr.Textbox(label="Add Information to Model Card (using Markdown)", lines=6)
+                            
+
+
+
+
         with gr.Tab("Add Lora Models", id="tab_AddLoraModels") as inner_tab_AddLoraModels:
             with gr.Row(equal_height=True):
                 with gr.Column(scale=2, min_width=100):
                     loradropdown = gr.Dropdown(choices=LLSTUDIO["lora_model_list"], label="Availiable Lora Models to Add to Loaded Model")
                 with gr.Column(scale=0, min_width=100):
                     reload_lora_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+            with gr.Row():
+                with gr.Column(scale=2, min_width=100):
+                    loraload_model_use_lcmscheduler = gr.Checkbox(label="Use LCMScheduler - (Must check if adding the LCM-LoRA Weights manually.)")
             with gr.Row(equal_height=True):
                 with gr.Column(scale=2, min_width=100):
                     lora_scale_value = gr.Slider(label="Lora Scale", value=1.0, minimum=-10.0, maximum=10, step=0.1)
@@ -9036,7 +9245,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                     lora_change_weight_button = gr.Button("", icon="./icons/hierarchy64.png", elem_id="add_button")
             with gr.Row():
                 with gr.Column(scale=2, min_width=100):
-                    lorahtml = gr.HTML("<p>If adding the LCM-LoRAs weights here, rather than loaded automatically when the model is loaded<br>Make sure to check the weight scale for the LoRA before loading.<br>Should be set to '1.0' for the LCM-LoRAs. Feel free to experiment. :)<br>NOTE: The LoRA Scale 'slider' will go from '-10' to '+10' to account for a few LoRA models I ran across which use both a postive, 0 or a negative value. Consult the model card for your LoRA model for more information on adjusting the LoRA weight.</p>")
+                    lorahtml = gr.HTML("<p>If adding the LCM-LoRAs weights here, rather than loaded automatically when the model is loaded:<br><ol><li>Make sure to check the weight scale for the LoRA before loading. (Should be set to '1.0' for the LCM-LoRAs.) Feel free to experiment. :)</li><li>You must also check 'Use LCMScheduler' to switch the pipeline to use the LCMScheduler rather than the default for the pipeline.</li></ol><br>NOTE: The LoRA Scale 'slider' will go from '-10' to '+10' to account for a few LoRA models I ran across which use both a postive, 0 or a negative value.<br>Consult the model card for your LoRA model for more information on adjusting the LoRA weight.</p>")
                 
 
 
@@ -9664,7 +9873,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
     lcm_model_reload_list_button.click(update_lcm_model_list_dropdown, None, lcm_model_list_dropdown)
     lcm_model_info_button.click(get_lcm_pipeclass_model_info, lcm_model_list_dropdown, lcm_model_list_html)
     # # rknote CONTROLNET must add to input list: [lcm_model_use_controlnet, lcm_model_cnet_dropdown]
-    lcm_model_load_model_button.click(load_lcm_model, inputs=[lcm_model_list_dropdown, lcm_model_use_diff_text_encoder_check, lcm_model_liste_dropdown, lcm_model_clipskip, lcm_model_use_controlnet, lcm_model_cnet_dropdown, lcm_model_use_controlnet2, lcm_model_cnet_dropdown2, load_lcm_model_fp16_check, load_lcm_modele_fp16_check], outputs=[lcm_model_list_html]).then(display_pipeline_info, inputs=[lcm_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
+    lcm_model_load_model_button.click(load_lcm_model, inputs=[lcm_model_list_dropdown, lcm_model_use_diff_text_encoder_check, lcm_model_liste_dropdown, lcm_model_clipskip, lcm_model_use_controlnet, lcm_model_cnet_dropdown, lcm_model_use_controlnet2, lcm_model_cnet_dropdown2, load_lcm_model_fp16_check, load_lcm_modele_fp16_check, load_lcm_model_add_lcmlora, load_lcm_model_lora_value, load_lcm_model_use_lcmscheduler], outputs=[lcm_model_list_html]).then(display_pipeline_info, inputs=[lcm_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
     # Load separate text encoder LCM-LoRA model list
     lcm_model_reload_liste_button.click(update_lcm_sdonly_model_list_dropdown, None, lcm_model_liste_dropdown)
 
@@ -9672,7 +9881,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
     # HUB - HUGGGINFACE Local Cache Model section
     hub_model_reload_list_button.click(update_hub_model_list_dropdown, None, hub_model_list_dropdown) 
-    hub_model_load_model_button.click(load_hub_model, inputs=[hub_model_list_dropdown, hub_model_fp16_check, hub_model_lora, hub_model_add_lcmlora], outputs=[hub_model_list_html]).then(display_pipeline_info, inputs=[hub_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
+    hub_model_load_model_button.click(load_hub_model, inputs=[hub_model_list_dropdown, hub_model_fp16_check, hub_model_model_use_lcmscheduler, hub_model_lora, hub_model_add_lcmlora], outputs=[hub_model_list_html]).then(display_pipeline_info, inputs=[hub_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
     hub_model_info_button.click(get_hub_pipeclass_model_info, hub_model_list_dropdown, hub_model_list_html)
    
     
@@ -9684,8 +9893,15 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
     # SAFETENSORS Model section
     safeload_model_reload_button.click(update_safe_convert_model_list_dropdown, None, safeload_model_dropdown) 
-    safeload_model_load_button.click(load_safetensors_model, inputs=[safeload_model_dropdown, safeload_pipeline_classes, safeload_model_lora, safeload_model_add_lcmlora, safeload_use_text_enc, safeload_lmc_text_enc_dropdown, safeload_use_text_fp16], outputs=[safeload_model_list_html]).then(display_pipeline_info, inputs=[safeload_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
+    safeload_model_load_button.click(load_safetensors_model, inputs=[safeload_model_dropdown, safeload_pipeline_classes, safeload_model_lora, safeload_model_add_lcmlora, safeload_use_text_enc, safeload_lmc_text_enc_dropdown, safeload_use_text_fp16, safeload_model_use_lcmscheduler], outputs=[safeload_model_list_html]).then(display_pipeline_info, inputs=[safeload_model_list_html], outputs=[model_list_html, lcm_model_list_html, hub_model_list_html, hug_model_list_html, safeload_model_list_html]).then(update_grapptitle, None, app_title_label)
     safeload_lmc_text_enc_refresh.click(update_safeload_lmc_text_enc_dropdown, None, safeload_lmc_text_enc_dropdown) 
+
+
+    # CONVERT LCM-LORA MODEL TO SAFETENSORS Model section
+    convert_lcm_model_reload_list_button.click(update_lcm_model_list_dropdown, None, convert_lcm_model_list_dropdown)
+    convert_lcm_model_info_button.click(get_lcm_pipeclass_model_info, convert_lcm_model_list_dropdown, convert_lcm_model_list_html)
+    convert_lcm_model_load_model_button.click(convert_to_safetensors_model, inputs=[convert_lcm_model_list_dropdown, convert_load_lcm_model_fp16_check, convert_safe_model_name, convert_safe_model_half, convert_safe_model_use, convert_safe_model_only, convert_safe_model_card_info], outputs=[convert_lcm_model_list_html]).then(update_grapptitle, None, app_title_label)
+
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -9935,7 +10151,7 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
     reload_lora_button.click(update_lora_model_list_dropdown, None, loradropdown)
     loaded_lora_list_refresh.click(update_loaded_lora_model_list_dropdown, None, loaded_loradropdown)
     lora_list_button.click(list_lora_model, None, lorahtml)
-    lora_add_button.click(add_lora_model, inputs=[loradropdown, lora_scale_value], outputs=[lorahtml]).then(update_grapptitle, None, app_title_label)
+    lora_add_button.click(add_lora_model, inputs=[loradropdown, lora_scale_value, loraload_model_use_lcmscheduler], outputs=[lorahtml]).then(update_grapptitle, None, app_title_label)
     lora_change_weight_button.click(change_lora_model, inputs=[loaded_loradropdown, lora_scale_value], outputs=[lorahtml]).then(update_grapptitle, None, app_title_label)
     lora_delete_button.click(delete_all_lora_adapters, None, lorahtml).then(update_grapptitle, None, app_title_label)
 

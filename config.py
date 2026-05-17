@@ -1,6 +1,6 @@
 # ---------------------------------------------------
 # ---------------LCM-LoRA Studio---------------------
-# -----------------Version 1.5-----------------------
+# -----------------Version 1.5a----------------------
 # ---------------------------------------------------
 # libraries, imports for configuration settings ui
 # Filename: config.py
@@ -32,7 +32,7 @@ pipeline = None
 # Also is OS independant 'path seperator' doing it this way :)
 LLSTUDIO = {
     "app_title": "LCM-LoRA Studio",
-    "app_version": "v1.5",
+    "app_version": "v1.5a",
     "app_author": "Rock Stevens",
     "app_url": "rockstevens.com/lcm-lora-studio",
     "app_github": "github.com/rock-stevens/lcm-lora-studio",
@@ -53,7 +53,7 @@ LLSTUDIO = {
 
 
 # ###############################################
-# #    GLOBAL DICTS for LCM-LoRA Studio  v1.5   #
+# #    GLOBAL DICTS for LCM-LoRA Studio  v1.5a  #
 # ###############################################
 
 

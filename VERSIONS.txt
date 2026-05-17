@@ -1,6 +1,27 @@
 ## LCM-LoRA-Studio Versions
 
-Current Version: 1.5
+Current Version: 1.5a
+
+----
+
+### Version History
+
+LCM-LoRA-Studio v1.5a
+
+Added - Save LCM-LoRA Models as Single File Safetensors Models (SD/SDXL).
+Added - Load separate Text Encoder for Safetensors Models (SD Only).
+Added - Turn On/Off LCM Scheduler at key points.
+        This gives the ability to Load a Single File Safetensors Model and Save as LCM-LoRA Model 
+		Fiddle with it...  Re-Save.
+		Then save back out to a Single File Safetensors Model again.
+		
+		Note: Tested in A1111, using an LCM Scheduler.
+
+
+FIX: Load separate Text Encoder for Safetensors Model fixes errors 
+     caused by 'missing text_encoder' in some Safetensors models.
+	 Must use a saved LCM-LoRA model.
+	 SD Only Models.
 
 ----
 
