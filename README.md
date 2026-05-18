@@ -449,7 +449,7 @@ Image Segmentation: lllyasviel/sd-controlnet-seg : https://huggingface.co/lllyas
 OpenPose: lllyasviel/sd-controlnet-openpose : https://huggingface.co/lllyasviel/sd-controlnet-openpose  
 
 
-**PyTorch - Linux Memory Fix**:
+**PyTorch - Linux Memory Fix**: 
 Brian, of Gridline Productions, for the 'PyTorch Memory Fix' : https://github.com/brjen/pytorch-memory-fix
 
 
