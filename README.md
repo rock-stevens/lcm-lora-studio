@@ -1,6 +1,6 @@
 <A id="top"></a>
 # LCM-LoRA Studio
- Version 1.5a
+ Version 1.5
   
 ![LCM-LoRA Studio](help/lcm-lora-studio-app-header.png)  
   
@@ -449,8 +449,12 @@ Image Segmentation: lllyasviel/sd-controlnet-seg : https://huggingface.co/lllyas
 OpenPose: lllyasviel/sd-controlnet-openpose : https://huggingface.co/lllyasviel/sd-controlnet-openpose  
 
 
+**PyTorch - Linux Memory Fix
+Brian, of Gridline Productions, for the 'PyTorch Memory Fix' : https://github.com/brjen/pytorch-memory-fix
+
+
 **Other Thanks**:  
-My Wife, and my family, who left me alone... with quiet... long enough to finish.
+My Wife, who left me alone... with quiet... long enough to finish.
 
 
 <br>
