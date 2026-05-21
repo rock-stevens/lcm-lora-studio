@@ -1,7 +1,18 @@
 ## LCM-LoRA-Studio Versions
 
-Current Version: 1.5a
+Current Version: 1.5b
 
+----
+
+### Version History
+
+LCM-LoRA-Studio v1.5b
+
+Added - Block Weighted Model Merging (SD/SDXL). With Presets, plus Load and Save Custom Weight profiles.
+
+FIX: Grammer throughout most all text.
+	 Cleaned up text wrapping in UI.
+	 
 ----
 
 ### Version History

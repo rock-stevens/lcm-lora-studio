@@ -12,6 +12,8 @@ UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for det
 
 UPDATE: 05-15-2026 Added: Save LCM-LoRA Models as Single File Safetensors Models (SD/SDXL), Load separate Text Encoder for Safetensors Models (SD Only).
 
+UPDATE: 05-21-2026 Block Weighted Model Merging (SD/SDXL). With Presets, plus Load and Save Custom Weight profiles.
+
 
 ***Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.***  
   
@@ -151,6 +153,7 @@ See the block diagram below.
 * Use 'Reference' Models and/or 'Original Config' Files when Loading Safetensors Model files to guide loading. (See settings)
 * Save LCM-LoRA Models to (Single File) Safetensors Models. (Compatible with A1111 if using an LCM Scheduler)
 * Turn On/Off LCM Scheduler at key points.
+* Block Weighted Model Merging (SD/SDXL). With Presets, plus Load and Save Custom Weight profiles.
 
 **LoRA**
 * Load the LCM-LoRA Weights and then save the Pipeline as an LCM-LoRA Model for the faster '4 step inference'.

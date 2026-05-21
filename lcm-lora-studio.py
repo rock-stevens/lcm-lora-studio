@@ -1,6 +1,6 @@
 # ---------------------------------------------------
 # ---------------LCM-LoRA Studio---------------------
-# -----------------Version 1.5a----------------------
+# -----------------Version 1.5b----------------------
 # ---------------------------------------------------
 # main application
 # Filename: lcm-lora-studio.py
@@ -387,6 +387,17 @@ LLSTUDIO["imgp_file_list"] = []
 LLSTUDIO["no_image"] = "no_image.png"
 
 
+
+#----------------------------------------
+# model merge setup
+PROFILES_ROOT = "merge_profiles"
+LLSTUDIO["profiles_list"]=['NO PROFILES']
+LLSTUDIO["profiles_dir"] = os.path.join(".", PROFILES_ROOT)
+os.makedirs(LLSTUDIO["profiles_dir"], exist_ok=True)
+is_sdxl_merge = False
+
+
+
 # ----------end of defines--------------------
 
 # ----------end of setup variables from settings---------------------------
@@ -395,12 +406,609 @@ LLSTUDIO["no_image"] = "no_image.png"
 # this flag, Keeps from starting a second download before last one stops
 DOWNLOAD_MODELS_FLAG = False
 
+
+# ==========================================================================================
+# Merge Model Static data
+# SD1.5 slider labels
+SD15_BLOCK_LABELS = ["00-IN00","01-IN01","02-IN02","03-IN03","04-IN04","05-IN05","06-IN06","07-IN07","08-IN08","09-IN09","10-IN10","11-IN11","12-IN12","13-MID","14-OUT00","15-OUT01","16-OUT02","17-OUT03","18-OUT04","19-OUT05","20-OUT06","21-OUT07","22-OUT08","23-OUT09","24-OUT10","25-OUT11"]
+# SDXL1.0 slider labels
+SDXL_BLOCK_LABELS = ["00-BASE","01-DOWN0-RES0","02-DOWN0-ATTN0","03-DOWN0-RES1","04-DOWN0-ATTN1","05-DOWN1-RES0","06-DOWN1-ATTN0","07-DOWN1-RES1","08-DOWN1-ATTN1","09-DOWN2-RES0","10-DOWN2-ATTN0","11-DOWN2-RES1","12-DOWN2-ATTN1","13-MID-RES0","14-MID-ATTN0","15-MID-RES1","16-UP0-RES0","17-UP0-ATTN0","18-UP0-RES1","19-UP0-ATTN1","20-UP0-RES2","21-UP0-ATTN2","22-UP1-RES0","23-UP1-ATTN0","24-UP1-RES1","25-UP1-ATTN1","26-UP1-RES2","27-UP1-ATTN2","28-UP2-RES0","29-UP2-ATTN0","30-UP2-RES1","31-UP2-ATTN1","32-UP2-RES2","33-UP2-ATTN2","34-OUT","35-OUT-NORM","36-OUT-CONV","37-FINAL-REFINE","38-FINAL-SHARPEN","39-FINAL"]
+
+# ----------------------
+# built-in presets
+PRESETS = {
+    "Balanced":
+        [0.5] * 40,
+    "Model A Dominant":
+        [0.2] * 40,
+    "Model B Dominant":
+        [0.8] * 40,
+    "Structure from A / Detail from B":
+        (
+            [0.2] * 14 +
+            [0.7] * 26
+        ),
+    "Style Transfer":
+        (
+            [0.1] * 12 +
+            [0.85] * 8 +
+            [0.5] * 20
+        ),
+    "Detail Booster":
+        (
+            [0.3] * 20 +
+            [0.85] * 20
+        ),
+    "Composition Keeper":
+        (
+            [0.05] * 15 +
+            [0.65] * 25
+        )
+}
+
 # ----------end of setup variables---------------------------
 
 
 # # ====================================================================================
 # # ======START========FUNCTIONS====FUNCTIONS====FUNCTIONS====FUNCTIONS====FUNCTIONS====
 # # ====================================================================================
+
+
+# ==========================================================================================
+# Merge model functions
+
+
+# ---------------------------------
+def get_block_weight(key, weights, is_sdxl):
+
+    if is_sdxl:
+        if "conv_in" in key:
+            return weights[0]
+        if "down_blocks" in key:
+            block_num = int(key.split("down_blocks.")[1].split(".")[0])
+            if "resnets.0" in key:
+                return weights[1 + (block_num * 4)]
+            if "attentions.0" in key:
+                return weights[2 + (block_num * 4)]
+            if "resnets.1" in key:
+                return weights[3 + (block_num * 4)]
+            if "attentions.1" in key:
+                return weights[4 + (block_num * 4)]
+        if "mid_block" in key:
+            if "resnets.0" in key:
+                return weights[13]
+            if "attentions.0" in key:
+                return weights[14]
+            if "resnets.1" in key:
+                return weights[15]
+        if "up_blocks" in key:
+            block_num = int(key.split("up_blocks.")[1].split(".")[0])
+            base = 16 + (block_num * 6)
+            if "resnets.0" in key:
+                return weights[base]
+            if "attentions.0" in key:
+                return weights[base + 1]
+            if "resnets.1" in key:
+                return weights[base + 2]
+            if "attentions.1" in key:
+                return weights[base + 3]
+            if "resnets.2" in key:
+                return weights[base + 4]
+            if "attentions.2" in key:
+                return weights[base + 5]
+        if "conv_norm_out" in key:
+            return weights[35]
+        if "conv_out" in key:
+            return weights[36]
+        return weights[39]
+    else:
+        if "time_embed" in key or "conv_in" in key:
+            return weights[0]
+        if "down_blocks" in key:
+            block_num = int(key.split("down_blocks.")[1].split(".")[0])
+            sub = 0
+            if "resnets" in key:
+                sub = int(key.split("resnets.")[1].split(".")[0])
+            elif "attentions" in key:
+                sub = int(key.split("attentions.")[1].split(".")[0])
+            idx = 1 + (block_num * 3) + sub
+            return weights[min(idx, 12)]
+        if "mid_block" in key:
+            return weights[13]
+        if "up_blocks" in key:
+            block_num = int(key.split("up_blocks.")[1].split(".")[0])
+            sub = 0
+            if "resnets" in key:
+                sub = int(key.split("resnets.")[1].split(".")[0])
+            elif "attentions" in key:
+                sub = int(key.split("attentions.")[1].split(".")[0])
+            idx = 14 + (block_num * 3) + sub
+            return weights[min(idx, 25)]
+        return 0.5
+
+
+# ---------------------------------
+# simple lookup table
+def get_block_description(idx, is_sdxl):
+
+    if is_sdxl:
+        if idx == 0:
+            return (
+                "SDXL Input Block.\n\n"
+                "Controls foundational image composition.\n"
+                "Strong influence on framing, pose, structure, and prompt adherence.\n\n"
+                "Lower values preserve Model A layout.\n"
+                "Higher values inject Model B composition behavior."
+            )
+        elif 1 <= idx <= 9:
+            return (
+                f"SDXL Down Block {idx}.\n\n"
+                "Early feature extraction stage.\n"
+                "Influences:\n"
+                "- anatomy\n"
+                "- perspective\n"
+                "- scene structure\n"
+                "- object placement\n"
+                "- prompt interpretation\n\n"
+                "Higher values move toward Model B structure."
+            )
+        elif idx == 10:
+            return (
+                "SDXL Mid Block.\n\n"
+                "One of the MOST influential layers.\n"
+                "Strongly affects:\n"
+                "- artistic style\n"
+                "- coherence\n"
+                "- lighting\n"
+                "- overall image identity\n\n"
+                "This is often the 'style transfer core' of SDXL merges."
+            )
+        elif 11 <= idx <= 30:
+            return (
+                f"SDXL Up Block {idx}.\n\n"
+                "Reconstruction and refinement layers.\n"
+                "Affects:\n"
+                "- textures\n"
+                "- detail density\n"
+                "- realism\n"
+                "- sharpness\n"
+                "- skin detail\n"
+                "- material appearance\n\n"
+                "Higher values favor Model B detailing."
+            )
+        else:
+            return (
+                f"SDXL Final Output Block {idx}.\n\n"
+                "Late denoising and cleanup stage.\n"
+                "Controls:\n"
+                "- micro-detail\n"
+                "- final sharpness\n"
+                "- edge cleanup\n"
+                "- noise characteristics\n"
+                "- image polish"
+            )
+    else:
+        if idx == 0:
+            return (
+                "SD1.5 Input Block.\n\n"
+                "Controls core composition and image planning.\n"
+                "Influences layout, framing, and general scene structure."
+            )
+        elif 1 <= idx <= 12:
+            return (
+                f"SD1.5 Down Block {idx}.\n\n"
+                "Early U-Net encoding stage.\n"
+                "Affects:\n"
+                "- shape language\n"
+                "- anatomy\n"
+                "- perspective\n"
+                "- composition\n"
+                "- concept interpretation"
+            )
+        elif idx == 13:
+            return (
+                "SD1.5 Mid Block.\n\n"
+                "Critical style synthesis region.\n"
+                "Controls:\n"
+                "- artistic style\n"
+                "- contrast\n"
+                "- lighting\n"
+                "- image cohesion"
+            )
+        elif 14 <= idx <= 24:
+            return (
+                f"SD1.5 Up Block {idx}.\n\n"
+                "Decoder reconstruction layers.\n"
+                "Strong effect on:\n"
+                "- detail quality\n"
+                "- textures\n"
+                "- realism\n"
+                "- edge quality\n"
+                "- rendering precision"
+            )
+        else:
+            return (
+                "Unused for SD1.5.\n\n"
+                "SD1.5 uses approximately 25 structural merge regions.\n"
+                "This slider is only active for SDXL."
+            )
+
+
+# ---------------------------------
+def export_profile(save_dir, profile_name, description, text_alpha, vae_alpha, model_type, weights):
+
+    data = {
+        "model_type": model_type,
+        "description": description,
+        "text_alpha": text_alpha,
+        "vae_alpha": vae_alpha,
+        "weights": list(weights)
+    }
+
+    path = os.path.join(save_dir, f"{profile_name}.json")
+        
+    try:
+        with open(path, "w") as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        return f"<h3>Error Saving Profile Name - {profile_name}</h3>"
+
+    return f"<h3>Saved profile: {profile_name}</h3>"
+
+# ---------------------------------
+def save_profile(profile_name, description, text_alpha, vae_alpha, model_type, *weights):
+
+    data = {
+        "model_type": model_type,
+        "description": description,
+        "text_alpha": text_alpha,
+        "vae_alpha": vae_alpha,
+        "weights": list(weights)
+    }
+
+    path = os.path.join(LLSTUDIO["profiles_dir"], f"{profile_name}.json")
+        
+    try:
+        with open(path, "w") as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        return f"<h3>Error Saving Profile Name - {profile_name}</h3>"
+
+    return f"<h3>Saved profile: {profile_name}</h3>"
+
+
+# -----------------------------------------------------
+def load_profile(profile_name):
+
+    if not profile_name or profile_name == None:
+        weights = []
+        while len(weights) < 40:
+            weights.append(0.5)
+        return ["SDXL", f"<h3>Error: Bad Profile Name: {profile_name}</h3>", "", "", 0.5, 0.5] + weights
+
+    path = os.path.join(LLSTUDIO["profiles_dir"], f"{profile_name}.json")
+   
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+    except Exception as e:
+        weights = []
+        while len(weights) < 40:
+            weights.append(0.5)
+        return ["SDXL", f"<h3>Error: Loading Profile: {profile_name}</h3>", "", "", 0.5, 0.5] + weights
+
+    weights = data["weights"]
+
+    while len(weights) < 40:
+        weights.append(0.5)
+
+    return [data["model_type"], f"<h3>Loaded Profile: {profile_name}<br>Description: {data['description']}</h3>", profile_name, data['description'], data["text_alpha"], data["vae_alpha"]] + weights
+
+
+# ---------------------------------
+# load merge model preset
+def apply_preset(preset_name):
+    values = PRESETS[preset_name]
+    while len(values) < 40:
+        values.append(0.5)
+    return values
+
+
+# ---------------------------------
+# merge model - long function
+def block_merge(model_a, model_b, fp16, out_fp16, out_safe, model_type, merged_model_name, text_alpha, vae_alpha, *block_weights):
+
+    global is_sdxl_merge
+    if model_type == "SDXL":
+        is_sdxl_merge = True
+    else:
+        is_sdxl_merge = False
+    
+    weights = list(block_weights)
+    global_text_alpha = float(text_alpha)
+    global_vae_alpha = float(vae_alpha)
+
+    tempout = ""
+
+    if model_a == model_b:
+        tempout = "<h3>Error - The same models for both Model A and Model B were selected. You can not merge the same model.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    if not model_a:
+        tempout = "<h3>Error - No Model Name for Model A. Try selecting another model.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    if not model_b:
+        tempout = "<h3>Error - No Model Name for Model B. Try selecting another model.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+    
+    output_dir = os.path.join(LLSTUDIO["lcm_model_dir"], merged_model_name)
+    if os.path.exists(output_dir):
+        tempout = f"<h3>Error - Merge Model Name '{output_dir}' Already Exists.<br>Try selecting another name for your merged model.</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    pipeline_cls = (
+        StableDiffusionXLPipeline
+        if is_sdxl_merge
+        else StableDiffusionPipeline
+    )
+
+    dtype = torch.float16 if fp16 else torch.float32
+
+    # Init a dict for arguments
+    pipeline_args = {}
+    if fp16:
+        pipeline_args["variant"] = "fp16"
+        pipeline_args["torch_dtype"] = dtype
+    pipeline_args["safety_checker"] = None
+    pipeline_args["requires_safety_checker"] = False
+    pipeline_args["feature_extractor"] = None
+    pipeline_args["local_files_only"] = True
+    pipeline_args["low_cpu_mem_usage"] = True
+
+    tempout = "<h3>Loading Model A...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        pipe_a = pipeline_cls.from_pretrained(get_lcm_model_path_file(model_a), **pipeline_args)
+    except Exception as e:
+        tempout = f"<h3>Error: Loading Model A<br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    tempout = "<h3>Loading Model B...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        pipe_b = pipeline_cls.from_pretrained(get_lcm_model_path_file(model_b), **pipeline_args)
+    except Exception as e:
+        tempout = f"<h3>Error: Loading Model B<br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    tempout = "<h3>Merging U-Net...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        state_dict_b = pipe_b.unet.state_dict()
+        total_layers = len(list(pipe_a.unet.named_parameters()))
+        for i, (key, param_a) in enumerate(pipe_a.unet.named_parameters()):
+            if key in state_dict_b:
+                alpha = get_block_weight(key, weights, is_sdxl_merge)
+                param_a.data.copy_((1.0 - alpha) * param_a.data + alpha * state_dict_b[key].data)
+                if i % 100 == 0:
+                    tempout = f"<h3>Processed [{i}/{total_layers}] U-Net layers</h3>"
+                    yield gr.update(value=tempout)
+    except Exception as e:
+        tempout = f"<h3>Error: Merging U-Net<br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    del state_dict_b
+    pipe_b.unet = None
+    gc.collect()
+    rkmalloc_trim()
+    
+    tempout = "<h3>Merging Text Encoders...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        encoders = ["text_encoder"]
+        if is_sdxl_merge:
+            encoders.append("text_encoder_2")
+        for encoder_name in encoders:
+            tempout = f"<h3>Merging - {encoder_name}...</h3>"
+            yield gr.update(value=tempout)
+            if hasattr(pipe_a, encoder_name):
+                mod_a = getattr(pipe_a, encoder_name)
+                mod_b = getattr(pipe_b, encoder_name)
+                if mod_a is None or mod_b is None:
+                    continue
+                state_dict_b = mod_b.state_dict()
+                for key, param_a in mod_a.named_parameters():
+                    if key in state_dict_b:
+                        param_a.data.copy_((1.0 - global_text_alpha) * param_a.data + global_text_alpha * state_dict_b[key].data)
+
+                del state_dict_b
+                setattr(pipe_b, encoder_name, None)
+                gc.collect()
+                rkmalloc_trim()
+    except Exception as e:
+        tempout = f"<h3>Error: Merging Text Encoders<br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    tempout = "<h3>Merging VAE...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        state_dict_b = pipe_b.vae.state_dict()
+        for key, param_a in pipe_a.vae.named_parameters():
+            if key in state_dict_b:
+                param_a.data.copy_((1.0 - global_vae_alpha) * param_a.data + global_vae_alpha * state_dict_b[key].data)
+        del state_dict_b
+        gc.collect()
+        rkmalloc_trim()
+    except Exception as e:
+        tempout = f"<h3>Error: Merging VAE<br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    del pipe_b
+    pipe_b = None
+    gc.collect()
+    rkmalloc_trim()
+
+    if out_fp16:
+        fp16_tempout = "fp16"
+    else:
+        fp16_tempout = "fp32"
+    
+    tempout = "<h3>Converting Merged Model to: " + fp16_tempout + "...</h3>"
+    yield gr.update(value=tempout)
+    
+    try:
+        if out_fp16:
+            pipe_a = pipe_a.to(dtype=torch.float16)
+        else:
+            pipe_a = pipe_a.to(dtype=torch.float32)
+    except Exception as e:
+        tempout = f"<h3>Error: Converting Merged Model to: {fp16_tempout}.<br>{e}</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    # Init a dict with the common arguments  **save_pipeline_args
+    save_pipeline_args = { }
+    
+    if out_fp16:
+        save_pipeline_args["variant"] = "fp16"
+        
+    if out_safe:
+        save_pipeline_args["safe_serialization"] = True
+    
+    tempout = f"<h3>Saving Merged Model to: {merged_model_name}...</h3>"
+    yield gr.update(value=tempout)
+
+    try:
+        pipe_a.save_pretrained(f"{output_dir}", **save_pipeline_args)
+    except Exception as e:
+        del pipe_a
+        pipe_a = None
+        gc.collect()
+        rkmalloc_trim()
+        tempout = f"<h3>Error: Saving Merged Model to: {merged_model_name} <br>{e}" + "</h3>"
+        yield gr.update(value=tempout)
+        return tempout
+
+    del pipe_a
+    pipe_a = None
+    gc.collect()
+    rkmalloc_trim()
+
+    # create a model card (*.md) for this 'merged' model 
+    # and put it in the image gallery for this specific LCM-LoRA Model
+    in_fp16 = ("fp16" if fp16 else "fp32" )
+    model_image_path_file = get_lcm_model_image_path_file(merged_model_name)
+    if not os.path.exists(model_image_path_file):
+        os.makedirs(model_image_path_file)
+    file1 = open(os.path.join(model_image_path_file, merged_model_name) + ".md", 'w')
+    content = "## Merged Model: " + merged_model_name + "    \n\n"
+    content = content + "## Original Model A: " + model_a + "    \n"
+    content = content + "## Original Model B: " + model_b + "    \n\n"
+    content = content + "### Models Type: " + model_type + "    \n"
+    content = content + "### Models Precision: " + in_fp16 + "    \n\n"
+    content = content + "### -----------------------------------    \n\n"
+    content = content + "### Merged Model Precision: " + fp16_tempout + "    \n\n"
+    content = content + "### Merged Model Text Encoder Weights: " + str(text_alpha) + "    \n"
+    content = content + "### Merged Model VAE Weights: " + str(vae_alpha) + "    \n"
+    content = content + f"### Merged Model Profile Name: '{merged_model_name}.json'    \n\n"
+    content = content + f"*Merged using {LLSTUDIO['app_title']} - {LLSTUDIO['app_version']}*    \n\n\n"
+    file1.write(content)
+    file1.close()    
+
+    # export/saves a 'merged_model_name.json' - merge profile
+    # in the model card directory to recreate with same weights later
+    export_profile(model_image_path_file, merged_model_name, content, text_alpha, vae_alpha, model_type, weights)
+
+
+    tempout = f"<h3>Merge completed successfully!<br>Saved Merged Model to: {merged_model_name}<br>Saved Model Card to: '{merged_model_name}.md'<br>Saved Merge Profile to: '{merged_model_name}.json'</h3>"
+    yield gr.update(value=tempout)
+    return f"<h3>Merge completed successfully!<br>Saved Merged Model to: {merged_model_name}<br>Saved Model Card to: '{merged_model_name}.md'<br>Saved Merge Profile to: '{merged_model_name}.json'</h3>"
+
+
+# ------------------------------------------------------------------
+# init ui sliders for block weights - runs once
+def build_block_slider_ui():
+    global is_sdxl_merge
+
+    sliders = []
+    for i in range(0, 40, 4):
+        with gr.Row(equal_height=True):
+            for j in range(4):
+                idx = i + j
+                if idx >= 40:
+                    continue
+                if idx >= 25:
+                    visible = False
+                else:
+                    visible = True
+                with gr.Column(scale=1, min_width=100):
+                    slider = gr.Slider(
+                        minimum=0.0,
+                        maximum=1.0,
+                        value=0.5,
+                        step=0.01,
+                        label=(
+                            SDXL_BLOCK_LABELS[idx]
+                            if idx < len(SDXL_BLOCK_LABELS)
+                            else f"Block {idx}"
+                        ),
+                        info=get_block_description(idx, is_sdxl_merge),
+                        visible=visible
+                    )
+                sliders.append(slider)
+
+    return sliders
+
+
+# ------------------------------------------------------------------
+def update_slider_visibility(model_type):
+    global is_sdxl_merge
+
+    if model_type == "SDXL":
+        is_sdxl_merge = True
+    else:
+        is_sdxl_merge = False
+
+    updates = []
+
+    for idx in range(40):
+        if is_sdxl_merge:
+            updates.append(
+                gr.update(
+                    visible=True,
+                    info=get_block_description(idx, is_sdxl_merge)
+                )
+            )
+        else:
+            visible = idx <= 24
+            updates.append(
+                gr.update(
+                    visible=visible,
+                    info=get_block_description(idx, is_sdxl_merge)
+                )
+            )
+
+    return updates
+    
+ 
+
+# ==========================================================================================
+
 
 # # ==============================================================
 # # START Image Processing Functions
@@ -5014,6 +5622,7 @@ def save_lcm_model(model_name,lora_value,use_safetensors,fp16):
     content = content + "## Original Model: " + old_model_name + "\n\n\n"
     content = content + "Loaded LoRAs: The 'LCM-LoRA', will not be shown if the model IS, an LCM-LoRA model. Because the LCM-LoRA has already been fused to the model, and given a prefixed model name to indicate model type\n\n\n"
     content = content + loadedloras + "\n\n\n"
+    content = content + f"*Converted using {LLSTUDIO['app_title']} - {LLSTUDIO['app_version']}*\n\n\n"
     file1.write(content)
     file1.close()    
 
@@ -5798,7 +6407,7 @@ def convert_to_safetensors_model(lcm_model_name, use_fp16, safe_model_name, use_
     content = content + "### Model Precision: " + safe_precision + "\n\n\n"
     content = content + "## Original Model: " + lcm_model_name + "\n"
     content = content + "### Original Model Precision: " + mod_precision + "\n\n\n"
-    content = content + "*Converted using LCM-LoRA Studio v1.5a*\n\n\n"
+    content = content + f"*Converted using {LLSTUDIO['app_title']} - {LLSTUDIO['app_version']}*\n\n\n"
     content = content + binfile_found_card + "\n\n\n"
     content = content + model_card_info + "\n\n\n"
     file1.write(content)
@@ -7169,6 +7778,36 @@ def delete_lcm_model(model_name, del_model, del_images):
     return contents, contents2
     
 
+# ==========================================================================================
+# model merge ui functions
+ 
+
+# ---------------------------------
+def update_merge_model_list_dropdown():
+    read_lcm_model_dir()
+    return gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], interactive=True), gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], interactive=True)
+
+    
+# ---------------------------------
+def update_profile_list_dropdown():
+    read_profile_dir()
+    return gr.Dropdown(choices=LLSTUDIO["profiles_list"], interactive=True)
+
+   
+# ---------------------------------
+def read_profile_dir():
+    LLSTUDIO["profiles_list"] = []
+    entries = [f for f in os.listdir(LLSTUDIO["profiles_dir"]) if os.path.isfile(os.path.join(LLSTUDIO["profiles_dir"], f))]
+    for i in range(len(entries)):
+        tmp_text = entries[i]
+        if tmp_text.endswith('.json'):
+            tmp_model = os.path.splitext(os.path.basename(tmp_text))[0]
+            LLSTUDIO["profiles_list"].append(tmp_model)
+
+    return
+
+
+# ==========================================================================================
 
     
 
@@ -8062,6 +8701,9 @@ read_safe_model_image_dir()
 read_lora_model_dir()
 read_lora_model_image_dir()
 
+# load lists of profiles for merge models ui tab
+read_profile_dir()
+
 
 # ------------------------------------------------------------
 print("------------------------------------------")
@@ -8515,6 +9157,18 @@ footer {
     border-color: #000000 !important;
 }
 .gradio-container {background-color: #111111}
+/* merge model profile load/save status box */
+#status-row-bg {
+    background-color: #222222 !important;
+    padding: 20px;
+    border-radius: 8px;
+}
+/* Targets the label text, input text, and markdown within this specific row */
+#status-row .label, 
+#status-row input, 
+#status-row p {
+    color: #cccccc !important; /* Neon teal foreground */
+}
 """
 
 
@@ -9572,22 +10226,114 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
             with gr.TabItem("Manage Models", id="tab_ManageModels"):
 
-                with gr.Row(equal_height=True):
-                    gr.Markdown("## Manage models by deleting unused/unwanted models.")
-
-                with gr.TabItem("Safetensors Models", id="tab_ManageModels_safe"):
+                with gr.TabItem("Merge Models", id="tab_MergeModels"):
+                    gr.Markdown("# SD / SDXL Weighted Block Model Merger")
+                    gr.Markdown("""Merges 2 of your 'saved' LCM-LoRA Models, and creates a new model from the merge.   
+                        *Merges only the U-Net, Text Encoders and VAE components of the models.*   
+                        "The 'sliders' control 'how much' of Model B is 'injected' into each structural region (block) of Model A.""")
+                    gr.Markdown("")
+                    gr.Markdown("## Models")
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=2, min_width=100):
-                            safetool_dropdown = gr.Dropdown(choices=LLSTUDIO["safe_model_list"], label="Availiable Safetensors Models to Delete")
+                            model_a = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Model A", info="Base model. Lower slider values preserve this model.")
+                        with gr.Column(scale=0, min_width=64):
+                            refresh_model_btn = gr.Button("", icon="./icons/refresh64.png", elem_id="icon_button", scale=0)
+                        with gr.Column(scale=2, min_width=100):
+                            model_b = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Model B", info="Injected model. Higher slider values favor this model.")
+                    with gr.Row():
+                        fp16 = gr.Checkbox(value=True,label="variant fp16", scale=2)
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=1, min_width=100):
+                            model_type = gr.Radio(choices=["SD1.5", "SDXL"], value="SD1.5", label="Model Type", info="Choose the model family.<br>Note: SD1.5 and SDXL cannot be merged together.")
+                        with gr.Column(scale=2, min_width=100):
+                            merged_model_name = gr.Textbox(value="My_Merged_Model", label="Merged New Model Name", info="New model name for the merged model. The new 'merged' model will be saved in your 'LCM-LoRA' Models folder.<br>To use the newly created model for generation, just go to the 'Pipeline Models - LCM-LoRA Models List' tab, and refresh the dropdown list. Then select it in the list to load your new 'merged' model.")
+                    gr.HTML("<hr>")
+                    gr.Markdown("")
+                    with gr.Accordion("U-Net Presets", open=False):
+                        preset_dropdown = gr.Dropdown(choices=list(PRESETS.keys()), value="Balanced", label="Preset", info="Apply predefined merge weighting strategies. Good for use as a starting point to experiment.<br>Note: Select model type 'SD' or 'SDXL' before applying a 'preset'.")
+                        apply_preset_btn = gr.Button("Apply Preset")
+                    gr.HTML("<hr>")
+                    gr.Markdown("")
+                    with gr.Accordion("Profiles", open=False):
+                        gr.Markdown("Loads and Saves all the weights and model type settings. Use to apply the same merge, to the same model type in the future.")
+                        with gr.Row():
+                            gr.Markdown("### Load Profiles")
+                        with gr.Row(equal_height=True):
+                            with gr.Column(scale=2, min_width=100):
+                                load_profile_dropdown = gr.Dropdown(choices=LLSTUDIO["profiles_list"], label="Load Profile")
+                            with gr.Column(scale=0, min_width=100):
+                                refresh_profile_btn = gr.Button("", icon="./icons/refresh64.png", elem_id="icon_button", scale=0)
+                                load_profile_btn = gr.Button("", icon="./icons/load64.png", elem_id="icon_button", scale=0)
+                        with gr.Row(equal_height=True, elem_id="status-row-bg"):
+                            with gr.Column(scale=0):
+                                gr.HTML("<h2>Load/Save Profile Status:</h2>")
+                            with gr.Column(scale=2, min_width=100):
+                                loaded_profile_html = gr.HTML("Status: Ready.")
+                        with gr.Row():
+                            gr.Markdown("### Save Profiles")
+                        with gr.Row(equal_height=True):
+                            with gr.Column(scale=2, min_width=100):
+                                profile_name = gr.Textbox(label="New Profile Name", value="My_Profile_SDXL", info="Try and be descriptive when naming your profiles.<br>Possibly include an 'SD' or 'SDXL' in the name to indicate which type of model the profile is used for.")
+                            with gr.Column(scale=0, min_width=100):
+                                save_profile_btn = gr.Button("", icon="./icons/save64.png", elem_id="icon_button", scale=0)
+                        with gr.Row():
+                            profile_description = gr.Textbox(label="New Profile Description", lines=2, value="My description for a profile.", info="Just a simple description for the profile.")
+                    gr.HTML("<hr>")
+                    gr.Markdown("")
+                    with gr.Accordion("Text Encoder Weight and VAE Weights", open=False):
+                        with gr.Row(equal_height=True):
+                            with gr.Column(scale=1, min_width=100):
+                                text_alpha = gr.Slider(minimum=0.0, maximum=1.0, value=0.5, step=0.01, label="Text Encoder Alpha", info="Controls prompt understanding/style language blending.\nHigher values favor Model B prompt interpretation.")
+                            with gr.Column(scale=1, min_width=100):
+                                vae_alpha = gr.Slider(minimum=0.0, maximum=1.0, value=0.5, step=0.01, label="VAE Alpha", info="Controls color processing and latent decoding.\nHigher values favor Model B color science and contrast.")
+                    gr.HTML("<hr>")
+                    gr.Markdown("")
+                    with gr.Accordion("U-Net Block Weight Controls", open=False):
+                        sliders = build_block_slider_ui()
+                    gr.HTML("<hr>")
+                    gr.Markdown("")
+                    gr.Markdown("## Saved Merged Output Model Parameters")
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=1, min_width=100):
+                            out_fp16 = gr.Checkbox(label="Save using Half Precision (fp16)", value=True)
+                        with gr.Column(scale=1, min_width=100):
+                            out_safe = gr.Checkbox(label="Save as Safetensors", value=True)
+                    gr.Markdown("")
+                    with gr.Row():
+                        with gr.Column(scale=1, min_width=100):
+                            merge_goto_top_btn = gr.Button("Top of Page", elem_id="gray_button")
+                        with gr.Column(scale=2, min_width=200):
+                            merge_btn = gr.Button("Merge Models", elem_id="green_button")
+                    merge_status_html = gr.HTML("Status - Ready...")
+                    gr.HTML("<br><br>")
+
+
+                with gr.TabItem("LCM-LoRA Models", id="tab_LCMModels"):
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            lcmtool_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Availiable LCM-LoRA Models to Delete")
                         with gr.Column(scale=0, min_width=100):
-                            safetool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
-                            safetool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
+                            lcmtool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+                            lcmtool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
                     with gr.Row():
                         with gr.Column(scale=2, min_width=100):
-                            safetool_delete_model_check = gr.Checkbox(label="Delete Model")
-                            safetool_delete_images_check = gr.Checkbox(label="Delete Model Image Gallery")
-                            safetool_html2 = gr.HTML("")
-                            safetool_html = gr.HTML("")
+                            lcmtool_delete_model_check = gr.Checkbox(label="Delete Model")
+                            lcmtool_delete_images_check = gr.Checkbox(label="Delete Model Image Gallery")
+                            lcmtool_html2 = gr.HTML("")
+                            lcmtool_html = gr.HTML("")
+
+                with gr.TabItem("Huggingface (Local Cached) Models", id="tab_HuggingfaceLocalCachedModels"):
+                    with gr.Row(equal_height=True):
+                        with gr.Column(scale=2, min_width=100):
+                            hub_tool_dropdown = gr.Dropdown(choices=LLSTUDIO["hub_model_list"], label="Availiable Huggingface (Local Cached) Models Models to Delete")
+                        with gr.Column(scale=0, min_width=100):
+                            hub_tool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+                            hub_tool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
+                    with gr.Row():
+                        with gr.Column(scale=2, min_width=100):
+                            hub_tool_delete_model_check = gr.Checkbox(label="Delete Model")
+                            hub_tool_html2 = gr.HTML("")
+                            hub_tool_html = gr.HTML("")
 
                         
                 with gr.TabItem("LoRA Models", id="tab_LoRAModels"):
@@ -9604,37 +10350,22 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                             loratool_html2 = gr.HTML("")
                             loratool_html = gr.HTML("")
 
-                        
-                with gr.TabItem("LCM-LoRA Models", id="tab_LCMModels"):
+                with gr.TabItem("Safetensors Models", id="tab_ManageModels_safe"):
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=2, min_width=100):
-                            lcmtool_dropdown = gr.Dropdown(choices=LLSTUDIO["lcm_model_list"], label="Availiable LCM-LoRA Models to Delete")
+                            safetool_dropdown = gr.Dropdown(choices=LLSTUDIO["safe_model_list"], label="Availiable Safetensors Models to Delete")
                         with gr.Column(scale=0, min_width=100):
-                            lcmtool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
-                            lcmtool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
+                            safetool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
+                            safetool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
                     with gr.Row():
                         with gr.Column(scale=2, min_width=100):
-                            lcmtool_delete_model_check = gr.Checkbox(label="Delete Model")
-                            lcmtool_delete_images_check = gr.Checkbox(label="Delete Model Image Gallery")
-                            lcmtool_html2 = gr.HTML("")
-                            lcmtool_html = gr.HTML("")
+                            safetool_delete_model_check = gr.Checkbox(label="Delete Model")
+                            safetool_delete_images_check = gr.Checkbox(label="Delete Model Image Gallery")
+                            safetool_html2 = gr.HTML("")
+                            safetool_html = gr.HTML("")
 
 
-                        
-                with gr.TabItem("Huggingface (Local Cached) Models", id="tab_HuggingfaceLocalCachedModels"):
-                    with gr.Row(equal_height=True):
-                        with gr.Column(scale=2, min_width=100):
-                            hub_tool_dropdown = gr.Dropdown(choices=LLSTUDIO["hub_model_list"], label="Availiable Huggingface (Local Cached) Models Models to Delete")
-                        with gr.Column(scale=0, min_width=100):
-                            hub_tool_reload_button = gr.Button("", icon="./icons/refresh64.png", elem_id="reloadmodellist_button")
-                            hub_tool_delete_button = gr.Button("", icon="./icons/trash64.png", elem_id="deletemodel_button")
-                    with gr.Row():
-                        with gr.Column(scale=2, min_width=100):
-                            hub_tool_delete_model_check = gr.Checkbox(label="Delete Model")
-                            hub_tool_html2 = gr.HTML("")
-                            hub_tool_html = gr.HTML("")
-
-
+ 
             with gr.TabItem("System", id="tab_System"):
                 with gr.Accordion("Control System/Application", open=True):
                     with gr.Row(equal_height=True):
@@ -9691,21 +10422,21 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
                     with gr.Row(equal_height=True):
                         dlm14 = gr.Checkbox(label="fp32", value=False, info="<font size='+1'><b>System/Base Model: diffusers/sdxl-instructpix2pix-768</b></font><br>SDXL - Base/reference model for SDXL instruct-pix2pix")
                     with gr.Row(equal_height=True):
-                        dlm15 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-mlsd</b></font><br>ControlNet ModelSafetensors type<br>M-LSD line detection")
+                        dlm15 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-mlsd</b></font><br>ControlNet Model - Safetensors type<br>M-LSD line detection")
                     with gr.Row(equal_height=True):
-                        dlm16 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-hed</b></font><br>ControlNet ModelSafetensors type<br>HED edge detection")
+                        dlm16 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-hed</b></font><br>ControlNet Model - Safetensors type<br>HED edge detection")
                     with gr.Row(equal_height=True):
-                        dlm17 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-depth</b></font><br>ControlNet ModelSafetensors type<br>Midas depth estimation")
+                        dlm17 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-depth</b></font><br>ControlNet Model - Safetensors type<br>Midas depth estimation")
                     with gr.Row(equal_height=True):
-                        dlm18 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-scribble</b></font><br>ControlNet ModelSafetensors type<br>Hand drawn scribbles")
+                        dlm18 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-scribble</b></font><br>ControlNet Model - Safetensors type<br>Hand drawn scribbles")
                     with gr.Row(equal_height=True):
-                        dlm19 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-canny</b></font><br>ControlNet ModelSafetensors type<br>Canny edge detection")
+                        dlm19 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-canny</b></font><br>ControlNet Model - Safetensors type<br>Canny edge detection")
                     with gr.Row(equal_height=True):
-                        dlm20 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-normal</b></font><br>ControlNet ModelSafetensors type<br>Normal map")
+                        dlm20 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-normal</b></font><br>ControlNet Model - Safetensors type<br>Normal map")
                     with gr.Row(equal_height=True):
-                        dlm21 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-seg</b></font><br>ControlNet ModelSafetensors type<br>Semantic segmentation")
+                        dlm21 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-seg</b></font><br>ControlNet Model - Safetensors type<br>Semantic segmentation")
                     with gr.Row(equal_height=True):
-                        dlm22 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-openpose</b></font><br>ControlNet ModelSafetensors type<br>OpenPose bone image")
+                        dlm22 = gr.Checkbox(label="SD only", value=False, info="<font size='+1'><b>System Model: lllyasviel/sd-controlnet-openpose</b></font><br>ControlNet Model - Safetensors type<br>OpenPose bone image")
                     with gr.Row(equal_height=True):
                         dlm23 = gr.Checkbox(label="All", value=False, info="<font size='+1'><b>System Model: depth-estimation</b></font><br>Transformers - Safetensors type<br>Creates a 'depth map' image, whichan be used with a ControlNet.")
                     with gr.Row(equal_height=True):
@@ -10228,6 +10959,26 @@ with gr.Blocks(**blocks_kwargs) as lcmlorastudio:
 
 
     # TOOLS
+    
+# ------------------------------------------------------------------------------------------------------------------
+
+    # Model Merge section
+    
+    model_type.change(fn=update_slider_visibility,inputs=model_type,outputs=sliders)
+
+    merge_btn.click(fn=block_merge,inputs=[model_a,model_b,fp16,out_fp16,out_safe,model_type,merged_model_name,text_alpha,vae_alpha,*sliders],outputs=merge_status_html)
+    merge_goto_top_btn.click(None, None, None, js="() => { window.scrollTo({top: 0}); }")
+
+    apply_preset_btn.click(fn=apply_preset,inputs=[preset_dropdown],outputs=sliders)
+
+    save_profile_btn.click(fn=save_profile,inputs=[profile_name,profile_description,text_alpha,vae_alpha,model_type,*sliders],outputs=loaded_profile_html)
+    load_profile_btn.click(fn=load_profile,inputs=[load_profile_dropdown],outputs=[model_type, loaded_profile_html, profile_name, profile_description, text_alpha, vae_alpha] + sliders)    
+    refresh_model_btn.click(update_merge_model_list_dropdown,None,outputs=[model_a, model_b])    
+    refresh_profile_btn.click(update_profile_list_dropdown,None,load_profile_dropdown)    
+
+# ------------------------------------------------------------------------------------------------------------------
+
+
     # Safetensors Viewer section
     safetool_reload_button.click(update_safe_model_list_dropdown, None, safetool_dropdown)
     safetool_delete_button.click(delete_safe_model, inputs=[safetool_dropdown,safetool_delete_model_check,safetool_delete_images_check], outputs=[safetool_html2, safetool_html])
