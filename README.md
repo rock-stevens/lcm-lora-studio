@@ -8,11 +8,14 @@
 ## Introduction
 
 
-UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)
+UPDATE: 08-08-2026 (V1.5b) Updated Help Section. Added more pages. Plus annotated screenshots.
+
+UPDATE: 05-21-2026 (V1.5b) Block Weighted Model Merging (SD/SDXL). With Presets, plus Load and Save Custom Weight profiles.
 
 UPDATE: 05-15-2026 (V1.5a) Added: Save LCM-LoRA Models as Single File Safetensors Models (SD/SDXL), Load separate Text Encoder for Safetensors Models (SD Only).
 
-UPDATE: 05-21-2026 (V1.5b) Block Weighted Model Merging (SD/SDXL). With Presets, plus Load and Save Custom Weight profiles.
+UPDATE: 05-09-2026 Runs on Raspberry Pi 5 OS with 8 GB RAM !!. See below for details. (MUST USE the 'lite' version for 8GB PI5)
+
 
 
 ***Create a high-quality image, in an average of ONLY 4 STEPS, using just a low-end CPU or a Raspberry Pi 5.***  
