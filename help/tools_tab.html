@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>LCM-LoRA Studio - Help - Tools</title>
+        <style>body{background-color:#222;color:#aaa}a,a:active,a:focus,a:link,a:visited{color:#c64;text-decoration:underline}a:hover{color:#f97;text-decoration:none}</style>
+    </head>
+<body>
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio - Help - Tools</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+</ul>
+</p>
+<hr>
+<!-- MAIN CONTENT START -->
+
+
+
+<h2>
+Tools - Image Processing
+</h2>
+
+<p>
+If you go to the Tools Tab, Image Processing. 
+</p>
+
+<p>
+I included to facilitate making the canny images and other edge images. Plus do post processing on generated images if desired.
+</p>
+
+<p>
+ If you drop down the accordion 'image processing load save', you'll see files that are in the 'imgp_files' directory in the root of the program folder. This whole tab works only on image files located here in this directory. Isolated from all other images. 
+</p>
+
+<p>
+All of the images you load in, or save to, works out of that one folder. That way you don't pollute your whole ecosystem with these pieces of files (images) you're just using to generate an image from. Like a canny image. But you load your image and it goes into the input image box. From there you can process the image in a post process stage.
+</p>
+
+<p>
+At each stage. You've got different things you can adjust. Brightness, contrast. You can just run the different stages. Grab the image output at each stage. Send to a ControlNet Input. 'Copy' to the Clipboard to Input into anonther Image Input in LCM-LoRA Studio, or 'paste' into a another application.
+</p>
+
+<p>
+It'll also do a Depth Map, Edge Detection and Canny. 
+</p>
+
+<p>
+And once it's done, you can send these directly to your ControlNet input with a button push and/or save the images.
+</p>
+
+<p>
+We can send a grayscale if you do a depth map on it. It'll do a depth map on the adjusted image and the output will end up in the grayscale. Stage two. Once it's done, you click the button and it'll send it directly to ControlNet 1. 
+</p>
+
+<p>
+Speaking of ControlNet stuff, I made a simple, real simple Openpose editor. You can check it out. It's got its own instructions. It opens up in a separate tab in your browser and it's just a web page with JavaScript in it. 
+</p>
+
+<br>
+<hr>
+<br>
+
+<h2>
+Tools - Manage Images
+</h2>
+
+<p>
+This part of the program is what you can use to delete images from your output folder. When you go to that tab, it's all of your outputs. 
+</p>
+
+<p>
+If you click on one of the images, it'll display the prompt. 
+</p>
+
+<p>
+And that's it. You can click on them. So you can browse through it and look at your outputs. It's another way of looking at your outputs, like the output gallery, except through this way. Once you've got one on the screen, you can drop the accordion down at the bottom of the page, where it says 'image text parameter to (delete hidden for safety)' and delete it. 
+</p>
+
+<p>
+It deletes the picture AND the text parameter file that goes with it. 
+</p>
+
+<p>
+You've got to close the picture for it to refresh that whole list, which is why I mentioned somewhere else in this documentation. You might want to keep the number of images in your output folder down because it slows this part of the program down. It's a Gradio Cache thing :)
+</p>
+
+<p>
+But once you hit delete, as soon as you close that picture, the whole thing will get refreshed. 
+</p>
+
+<p>
+Now if you don't close the image, eventually a new one will appear. How long depends on how many images are in your output folder. 
+</p>
+
+<p>
+And that's how you can tame your unwanted output images. 
+</p>
+
+
+<br>
+<hr>
+<br>
+
+<h2>
+Tools - Manage Models
+</h2>
+
+
+<p>
+Under the Manage Models tab, you have the 'LCM-LoRA Models', 'Huggingface', 'Local Cached Models', 'Lora Models', And 'Safetensors Models' tabs. These tabs provide an easy, 'built-in' way, for you to delete unwanted models. 
+</p>
+
+<p>
+For your 'saved' LCM-LoRA Models, LoRa Models, and Safetensors Models, that you have the 'base' Model itself, plus a possible, Model's 'Gallery' of images, and a 'Model Card', it's a separate delete for the Gallery and Model Card. 
+</p>
+
+<p>
+You have to check the boxes at the bottom to delete amything, it won't delete it and it'll tell you that.<br>
+The checkboxes serve as a type of "Confirm to Delete?' dialog. 
+</p>
+
+<p>
+For Huggingface it just deletes the folder the model is stored in. Which will make it go download it again because it can't find it. If you think you got a corrupt one, I guess you can delete it and just go tell it to get it again, or just try and use it. It will go get it, if you just simply try and use it. That's one of the reasons I put that in there. Otherwise, I normally don't touch the Huggingface models. Once downloaded, I leave them be. But sometimes files do get corrupt.
+<br>
+<i>Of course this only applies if models appear in the Huggingface dropdown box. If they do not, that can be fixed in 'Settings', see the 'Huggingface Hub Cache' location setting.</i>
+</p>
+
+
+
+<!-- MAIN CONTENT END -->
+<br>
+<a href="#"><img src="backtotop.png" width="32" height="32" alt="Back to Top" title="Back to Top"></a>
+<br>
+<br>
+<hr>
+<p>Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a></p>
+<br>
+<br>
+</body>
+</html>
+
