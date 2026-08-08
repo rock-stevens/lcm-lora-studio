@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>LCM-LoRA Studio - Help - Pipeline-Models</title>
+        <style>body{background-color:#222;color:#aaa}a,a:active,a:focus,a:link,a:visited{color:#c64;text-decoration:underline}a:hover{color:#f97;text-decoration:none}</style>
+    </head>
+<body>
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio - Help - Pipeline-Models</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+</ul>
+</p>
+<hr>
+<!-- MAIN CONTENT START -->
+
+
+
+<p>
+Pipeline models tab.
+</p>
+
+<p>
+First we'll go over the LCM-LoRA Model tab. 
+</p>
+
+<p>
+The top portion is the information area. 
+</p>
+
+<p>
+On the right are, Refresh, Information amd Load buttons. Refresh, simply refreshes the dropdown box list of models. The Information button probes the selected model and tells you what kind of model it is and what it can be used for. And of course the Load button, loads the model into the Pipeline. 
+</p>
+
+<p>
+Variant FP16. When it's checked, it uses a 16-bit variant of the model rather than the full or 32-bit version of the model. Depending on what precision you previously saved the model in. (All LCM-LoRA Models are user saved models)
+</p>
+
+<p>
+There's not too much of a difference in the output between the two precisions. Yet, FP16 does use less memory, which is why it's already checked. Like I said, most of the stuff in this program, to get the speed, and the timing that I claim. Leave it alone. 
+</p>
+
+<p>
+Set LCM-LoRA scale. It's only valid when you have Auto-Add LCM-LoRA Weights checked. Leave it set to 1.0
+</p>
+
+<p>
+The Auto-Add LCM-LoRA Weights automatically adds the LCM-LoRA Weights whe you load the model.</p>
+
+<p>
+Use LCM Scheduler Only. When LCM-LoRA Weights are 'baked-in' to the model without the LCMScheduler. Very rare usage cases.</p>
+
+<p>
+This was added at the last minute when I discovered a scenario, trying to cover all possible scenarios. I discovered a scenario where I could: 
+
+<ul>
+<li>Download a Safetensors model off the internet.</li>
+<li>Load it, Auto-Add LCM-LoRA Weights automatically.</li>
+<li>Save LCM-LoRA Model</li>
+<li>Export as Safetensors Single file, which now has the LCM-LoRA Weights in it.</li>
+<li>Load it back into LCM-LoRA Studio. Yet, we know it has the LCM-LoRA Weights in it, LCM-LoRA Studio don't</li>
+</ul>
+<br>
+No mechanism for selecting the Scheduler needed in models in Safetensors format. 
+</p>
+
+
+
+
+<br>
+<hr>
+<br>
+
+
+
+<p>
+Hugging face local cache model list. If it found your cache, I don't know, a lot of different results on computers. 
+</p>
+
+<p>
+But if it found it, your models will be loaded here, filtering out all the LLMs and things like that, you may have. 
+</p>
+
+<p>
+But anyway, you basically just load them straight from here, which is why I have the setting in 'Settings' to override environmental variables and things. It tries to find Hugging Face Hub models. It's not needed. You can still go over to Hugging Face Model tab and type it in and load it.</p>
+
+<p>
+But it's a lot easier once you've got the thing, to just select it from this dropdown box rather than having to type it in every time.</p>
+
+<p>
+But once you've got it loaded in the pipeline, go ahead and save it. Add your LCM-LoRA weights to it so you can do your faster 4-Step inference. And go ahead and save it there. And you're all set. When you load that model, which is the whole idea behind being able to save the models with the LCM-LoRA weights added to it. All you have to do is launch the program, go to the LCM-LoRA Model tab, select your model, load it, and generate your art. 
+</p>
+
+<p>
+It's pretty much straightforward.</p>
+
+<p>
+You must select the correct pipeline class to load the model.</p>
+
+
+
+
+
+
+
+<br>
+<hr>
+<br>
+
+
+
+
+<p>Safetensors Models</p>
+
+<p>
+I've had a few people report that they couldn't load a model. Finally found one that duplicated the error. (One user actually provided me a model name). 
+</p>
+
+<p>
+Went and got it. Tried to load it. And it bombed out on me too. 
+</p>
+
+<p>
+After further investigation, found out that the Safetensors Model had no text encoder in it. So, I included that checkbox, use separate text encoder to get around that problem.</p>
+
+<p>
+But it works on SD models only. And you load a separate text encoder from another SD model. You've already got saved in your LCM-LoRA models list.</p>
+
+<p>
+Most of the stuff in this program works out of that model list. So, you will at some point have to save a model to do a lot of stuff.</p>
+
+<p>
+But, kind of straightforward, just keep that Safesensors Model. Auto add LCM-LoRA weights, Select and Use a separate Text Encoder, Select correct pipeline, Click Load. Now you're good to go. Generate a few pictures to test the model. If all ok. Save as a new model. Model is now fixed. :)
+</p>
+
+
+
+
+
+<!-- MAIN CONTENT END -->
+<br>
+<a href="#"><img src="backtotop.png" width="32" height="32" alt="Back to Top" title="Back to Top"></a>
+<br>
+<br>
+<hr>
+<p>Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a></p>
+<br>
+<br>
+</body>
+</html>
+
