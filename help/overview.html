@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>LCM-LoRA Studio - Help - Overview</title>
+        <style>body{background-color:#222;color:#aaa}a,a:active,a:focus,a:link,a:visited{color:#c64;text-decoration:underline}a:hover{color:#f97;text-decoration:none}</style>
+    </head>
+<body>
+<img src="lcm-lora-studio-logo.png"><br>
+<h2>LCM-LoRA Studio - Help - Overview</h2>
+<p>
+<ul>
+<li><a href="index.html">Help - Index</a></li>
+</ul>
+</p>
+<hr>
+<!-- MAIN CONTENT START -->
+
+
+
+
+<p>
+Welcome to LCM-LoRA Studio - Overview. I will go over the unobvious and some of the obvious of the program, and will explain some of the operation of LCM-LoRA Studio. 
+</p>
+
+
+<p>
+The program was originally designed to counter the fact that I do not have an NVIDIA GPU card, nor a good enough computer to shove one in if I had one. All I've got is an N95 Intel processor and 16 gig of RAM, which is shared with the GPU graphics, of course. 
+</p>
+
+<p>
+Take a look at the block diagram of LCM-LoRA Studio, you can refer to this when needed.<br><br>
+<img src="lcm-lora-studio-block-diagram.png" alt="LCM-LoRA Studio BLok Diagram" title="LCM-LoRA Studio BLok Diagram"></p>
+<br>
+<p>
+At the heart of LCM-LoRA Studio is the 'LCM-LoRA Model' list. This is where most of the functional parts of the application are. Most operations are performed on the LCM-LoRA Models which are models you, the user, have created/saved.</p>
+
+
+
+<p>No LCM-LoRA Models come shipped with LCM-LoRA Studio. You the user, create basically 'copies' of other models, which you save locally in the LCM-LoRA Models List.</p>
+
+
+
+<p>All LCM-LoRA Models are 'saved' in 'Diffusers' format, which is bascally all the parts of the model in individual files, divided up into directories, based on the separate components that the model is made of. Rather than say, a, Safetensors format, which is just a single file, which you can find at various sites on the internet, which can be used as well, either directly or saved as a LCM-LoRA Model in 'Diffusers' format, with or without the LCM-LoRA weights.
+</p>
+
+
+
+<p>
+To get the faster 4-Step inference, you MUST add the LCM-LoRA Weights to the 'base' model your are going to use to generate images. There is no other way to get the faster 4-Step inference.</p>
+
+
+
+<p>The LCM-LoRA Model list is to make life simpler. Grab a model from the internet, load into LCM-LoRA Studio, add the LCM-LoRA weights when you load it in. And then, Save this new LCM-LoRA type of the 'base' model you grabbed from the internet. From then on, you just load the LCM-LoRA model, the LCM-LoRA weights have already been added, ready as soon as it's loaded, to generate images, using the faster 4-Step inference. And you can also 'bake-in' other LoRAs for style. Save those too.
+</p>
+
+
+<p>
+Now, understand I'm not saying everything MUST be converted to 'Diffusers' format OR saved as an LCM-LoRA Model to generate images with the faster 4-Step inference.
+</p>
+
+
+<p>
+You can, download a Safetensors model from the internet, and load it too, directly as a single file Safetensors model everytime and automatically load the LCM-LoRA weights when the Safetensors model is loaded. There, your Safetensors model is loaded, WITH the LCM-LoRA weights. And you are ready to generate images with the faster 4-Step inference.
+</p>
+
+
+<p>
+So, you don't have to save them in the LCM-LoRA Model list.<br><br>
+But you lose out on these features in LCM-LoRA Studio because the models must be in the LCM-LoRA Model list to be able to:
+
+<ul>
+<li>Use Separate Text Encoder</li>
+<li>Use SD ControlNet</li>
+<li>ClipSkip</li>
+<li>Export a Model to Safetensors (Single File) Model</li>
+<li>Merge Models</li>
+<li>Save a Model with fused LoRAs</li>
+</ul>
+<br>
+Same things apply to models from Huggingface, even though most are already in 'Diffusers' format.<br>
+Yet downloading from Huggingface is built-into LCM-LoRA Studio.<br>
+And all Huggingface model downloads go straight into the Huggingface Hub Cache, and once you've downloaded it once, it will be retrieved from your cache rather than getting it from internet everytime it's needed in the future.
+</p>
+
+
+<p>
+With No Good GPU, only 16 GB RAM, there is only enough RAM for ONE PIPELINE.
+</p>
+
+
+<p>Since there is only ONE pipeline, it is shared between 
+<ul>
+<li>Your 'base' model, (plus any LoRAs added).</li>
+<li>The SD Upscale 2x 'base' model.</li>
+</ul>
+Therefore, only one 'base' model can be loaded at any one time, into the one pipeline.
+</p>
+
+<p>
+Since the SD Upscale 2x is a 'base' model, everything else goes out the window as soon as you click on 'Generate' when you are on the SD Upscale 2x tab. The program looks and sees what model is loaded and if it's not the upscale model, it loads it forcefully. It just does it. When it's done generating your SD Upscale 2x image, the SD Upscale 2x model is still in the pipeline for futher SD Upscale 2x tasks. 
+</p>
+
+<p>
+To generate more images with a 'base' model, you'll have to go back to Pipeline Models tab and load whatever you want for a model back into the pipeline. It's one caveat about the one pipeline. This pipeline is the thing that suffers. I doesn't get the advantage of the speed gain from the LCM-LoRA model, but I included it to be able to make the images larger, since I generate mostly 512x512.</p>
+
+<p>I use it rarely, but needed it included.</p>
+
+<p>My usage is about 1:20, so it's faster for me to make 20 - 512x512 images and only upscale 1 image, than make 20 larger images to begin with, time-wise.
+</p>
+
+
+
+
+
+
+<!-- MAIN CONTENT END -->
+<br>
+<a href="#"><img src="backtotop.png" width="32" height="32" alt="Back to Top" title="Back to Top"></a>
+<br>
+<br>
+<hr>
+<p>Copyright (C) 2025-present <a href="https://rockstevens.com">Rock Stevens</a></p>
+<br>
+<br>
+</body>
+</html>
