@@ -218,7 +218,8 @@ LLSTUDIO["current_os"] = platform.system()
 
 # ---------------------------------------
 # show the Debug Level when App starts, if greater than 0
-if int(STUDIO["app_debug"]["value"]) > 0: print("Debug Level: " + STUDIO["app_debug"]["value"])
+# resolved Issue#5 - stole code line from v1.7 (future version)
+# if int(STUDIO["app_debug"]["value"]) > 0: print("Debug Level: " + STUDIO["app_debug"]["value"])
 
 
 # ---------------------------------------
@@ -9156,13 +9157,17 @@ footer {
     border-style: none !important;
     border-color: #000000 !important;
 }
-.gradio-container {background-color: #111111}
+.gradio-container {
+    background-color: #111111
+    max-width: 100% !important;
+}
 /* merge model profile load/save status box */
 #status-row-bg {
     background-color: #222222 !important;
     padding: 20px;
     border-radius: 8px;
 }
+
 /* Targets the label text, input text, and markdown within this specific row */
 #status-row .label, 
 #status-row input, 
